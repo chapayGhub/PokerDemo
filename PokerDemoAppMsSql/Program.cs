@@ -86,7 +86,7 @@ namespace PokerDemoAppMsSql {
                         }
                         db.SaveChanges();
                     });
-                return null;
+                return 201;
             });
 
             Handle.POST(8081, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
@@ -98,7 +98,7 @@ namespace PokerDemoAppMsSql {
                         target.Balance += amount;
                         db.SaveChanges();
                     });
-                return null;
+                return 200;
             });
 
             Handle.POST(8081, "/deposit?a={?}&x={?}", (int toId, int amount) => {
@@ -108,7 +108,7 @@ namespace PokerDemoAppMsSql {
                         account.Balance += amount;
                         db.SaveChanges();
                     });
-                return null;
+                return 200;
             });
 
             Handle.DELETE(8081, "/all", () => {
@@ -117,7 +117,7 @@ namespace PokerDemoAppMsSql {
                         db.Database.ExecuteSqlCommand("DELETE FROM dbo.Accounts");
                         db.Database.ExecuteSqlCommand("DELETE FROM dbo.Players");
                     });
-                return null;
+                return 200;
             });
         }
 
