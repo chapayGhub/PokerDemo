@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<DemoConfig>
+    <ScServerIp>127.0.0.1</ScServerIp>
+	<ScServerPort>8080</ScServerPort>
+    <MsSqlServerIp>127.0.0.1</MsSqlServerIp>
+	<MsSqlServerPort>8081</MsSqlServerPort>
+</DemoConfig>
