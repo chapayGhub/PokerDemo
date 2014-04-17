@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoGui", "PokerDemoGu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoAppMsSql", "PokerDemoAppMsSql\PokerDemoAppMsSql.csproj", "{2DE15B83-AE0B-4481-BB29-902581021B79}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoAppMongoDb", "PokerDemoAppMongoDb\PokerDemoAppMongoDb.csproj", "{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,16 @@ Global
 		{2DE15B83-AE0B-4481-BB29-902581021B79}.Release|Mixed Platforms.Build.0 = Release|x64
 		{2DE15B83-AE0B-4481-BB29-902581021B79}.Release|x64.ActiveCfg = Release|x64
 		{2DE15B83-AE0B-4481-BB29-902581021B79}.Release|x64.Build.0 = Release|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|x64.ActiveCfg = Debug|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|x64.Build.0 = Debug|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|Any CPU.ActiveCfg = Release|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|Mixed Platforms.Build.0 = Release|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|x64.ActiveCfg = Release|x64
+		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
