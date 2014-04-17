@@ -23,11 +23,12 @@ namespace PokerDemoAppMongoDb {
         public int AccountId { get; set; }
         public int AccountType { get; set; }
         public int Balance { get; set; }
+        public ObjectId PlayerObjectId { get; set; }
 
         [BsonIgnore]
         public Player Player {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return Mongo.Db.GetCollection("Players").FindOneByIdAs<Player>(PlayerObjectId); }
+            set { PlayerObjectId = value.Id; }
         }
     }
 }
