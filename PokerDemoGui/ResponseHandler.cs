@@ -39,9 +39,11 @@ namespace PlayersDemoGui {
         }
 
         // Batched response processor.
-        void IResponseHandler.ProcessResponseBatch(Response[] responseBatch) {
+        void IResponseHandler.ProcessResponseBatch(Response[] responseBatch, int count) {
             
-            foreach (var response in responseBatch){
+            for (int i = 0; i < count; i++) {
+                var response = responseBatch[i];
+
                 // Checking for correct status code.
                 if (response.StatusCode == 200 || response.StatusCode == 201) {
                     // Increasing number of good responses.
@@ -52,16 +54,19 @@ namespace PlayersDemoGui {
                         Console.WriteLine("   {0} good responses of {1}", numGoodResps_, reqProvider_.RequestsCreator.TotalPlannedRequestsNum);
 
                     // Processing response body if it exists.
-                    if (response.Request.Method[0] == 'G') {
+
+                    IntPtr ptr;
+                    int size;
+
+                    response.GetBodyRaw(out ptr, out size);
+
+                    if (size > 0) {
                         // Checking the Gui paused flag.
                         if (!gui_.IsPaused) {
                             // Checking if we can update.
                             if (gui_.ResponseUpdateFlag) {
                                 PlayerAndAccounts p = new PlayerAndAccounts();
 
-                                IntPtr ptr;
-                                int size;
-                                response.GetBodyRaw(out ptr, out size);
                                 p.PopulateFromJson(ptr, size);
 
                                 // Converting header to string.
