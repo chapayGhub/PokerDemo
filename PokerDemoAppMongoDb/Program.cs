@@ -1,6 +1,7 @@
 ﻿using System;
 using Starcounter;
 using MongoDB.Driver;
+using MongoDB.Driver.Builders;
 
 namespace PokerDemoAppMongoDb {
 
@@ -18,6 +19,15 @@ namespace PokerDemoAppMongoDb {
     class Program {
         static void Main() {
             Mongo.Init();
+
+            Handle.GET(8082, "/players/{?}", (int playerId) => {
+                var json = new PlayerAndAccounts();
+                var query = Query<Player>.EQ(p => p.PlayerId, playerId);
+                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                json.PlayerId = player.PlayerId;
+                json.FullName = player.FullName;
+                return json;
+            });
 
             Handle.PUT(8082, "/players/{?}", (int playerId, PlayerAndAccounts json) => {
                 var player = new Player() { PlayerId = playerId, FullName = json.FullName };
