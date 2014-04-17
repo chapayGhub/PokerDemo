@@ -29,6 +29,7 @@ namespace PokerDemoAppMongoDb {
                         Balance = (int)a.Balance,
                         Player = player
                     };
+                    Mongo.Db.GetCollection("Accounts").Insert(account);
                 }
                 return 201;
             });
