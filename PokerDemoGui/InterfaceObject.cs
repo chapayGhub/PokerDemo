@@ -20,6 +20,8 @@ namespace PlayersDemoGui {
         private ResponseHandler respHandler = null;
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private bool runMsSql = false;
+
         #region Fields
 
         private bool _MSSQL_IsDone;
@@ -376,6 +378,9 @@ namespace PlayersDemoGui {
             if (bAbort)
                 return;
 
+            if (!runMsSql)
+                return;
+
             // Resetting test time.
             this.MSSQL_Time = new TimeSpan(0);   // ***
             this.MSSQL_IsDone = false;  // ***
@@ -471,25 +476,26 @@ namespace PlayersDemoGui {
 
             //////////////////////////////////////////////////////
 
-            // Running MS SQL.
-            this.IsStarcounterRunning = false;
-            this.IsPreparationDone = false;
+            if (runMsSql) {
+                // Running MS SQL.
+                this.IsStarcounterRunning = false;
+                this.IsPreparationDone = false;
 
-            // Resetting generated data.
-            respHandler.Reset();
+                // Resetting generated data.
+                respHandler.Reset();
 
-            // Closing the connection if any.
-            CloseConnection();
+                // Closing the connection if any.
+                CloseConnection();
 
-            // Starting client engine here.
-            clientConn = new Client();
+                // Starting client engine here.
+                clientConn = new Client();
 
-            clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider);
+                clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider);
 
-            // Waiting for cleanup to finish.
-            while (!this.IsPreparationDone)
-                Thread.Sleep(30);
-
+                // Waiting for cleanup to finish.
+                while (!this.IsPreparationDone)
+                    Thread.Sleep(30);
+            }
             //////////////////////////////////////////////////////
 
             // Ending preparation phase.

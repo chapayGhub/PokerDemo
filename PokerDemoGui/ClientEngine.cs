@@ -134,12 +134,9 @@ namespace ClientEngine {
         }
 
         // Creates linear requests one type after another.
-        //        const String deleteString = "DELETE /all HTTP/1.0\n\n";
-        public unsafe Request[] CreateLinearRequests(int maxBytesAllowed) {
+        public unsafe int CreateLinearRequests(Request[] requestBuffer) {
             UInt32 offset = 0;
-            List<Request> requests = new List<Request>();
-            Request request;
-
+            
             // Checking if we are in preparation phase.
             if (gui_.IsPreparationPhase) {
                 // Checking if we need to wait for certain amount of responses.
@@ -150,25 +147,24 @@ namespace ClientEngine {
 
                     // Preparation is done.
                     gui_.IsPreparationDone = true;
-                    return null;
+                    return 0;
                 } else {
                     // Sending delete all command.
-                    request = RequestGenerator.Delete();
+                    requestBuffer[0] = RequestGenerator.Delete();
 
                     // Disabling wait on next time.
                     numRespToWait_ = 1;
-
-                    return new Request[] { request };
+                    return 1;
                 }
             }
 
             // Checking if aborted.
             if (gui_.IsAborted)
-                return null;
+                return 0;
 
             // Checking if all requests are processed.
             if (totalRequestsProcessed_ >= totalPlannedRequestsNum_)
-                return null;
+                return 0;
 
             // Checking if we need to wait for certain amount of responses.
             if (numRespToWait_ > 0) {
@@ -206,13 +202,15 @@ namespace ClientEngine {
             }
 
             // Repeating until buffer is full.
-            while (offset < maxBytesAllowed) {
+            int count = 0;
+
+            while (count < requestBuffer.Length) {
                 // Getting type index.
                 Int32 typeIndex = requestTypesMixed_[totalRequestsProcessed_];
                 RequestTypes type = (RequestTypes)typeIndex;
                 Int32 curReqTypeIndex = numReqProcessed_[typeIndex];
 
-                request = null;
+                Request request = null;
 
                 // Performing request according to type.
                 switch (type) {
@@ -239,9 +237,8 @@ namespace ClientEngine {
                         break;
                 }
 
-//                offset += request.GetRequestLength();
-                offset += 30;
-                requests.Add(request);
+                requestBuffer[count] = request;
+                count++;
 
                 // Updating the Gui if possible.
                 UpdateRequestsGui(type, curReqTypeIndex);
@@ -253,15 +250,15 @@ namespace ClientEngine {
                 // Checking if we need to block next time to wait for responses.
                 if (numRespsNeeded_[typeIndex] == totalRequestsProcessed_) {
                     numRespToWait_ = numRespsNeeded_[typeIndex];
-                    return requests.ToArray();
+                    return count;
                 }
 
                 // Checking if all requests are processed.
                 if (totalRequestsProcessed_ >= totalPlannedRequestsNum_)
-                    return requests.ToArray();
+                    return count;
             }
 
-            return requests.ToArray();
+            return count;
         }
 
         // Updates Gui.

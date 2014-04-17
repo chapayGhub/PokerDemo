@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ClientEngine;
 using Starcounter;
@@ -14,11 +15,14 @@ namespace PlayersDemoGui {
         public const Int32 MaxAccumBufferBytes = 50000;
         public const Int32 MaxRequestBytes = 1000;
 
+        public AutoResetEvent WaitForBatch = new AutoResetEvent(true);
+
         // Request generator.
         RequestsCreator requestsCreator_ = null;
 
         // Batched request buffer.
-        Byte[] requestBuffer_ = null;
+//        Byte[] requestBuffer_ = null;
+        Request[] requestBuffer_ = null;
 
         // Reference to Gui.
         InterfaceObject gui_ = null;
@@ -60,20 +64,27 @@ namespace PlayersDemoGui {
                 );
 
             gui_ = gui;
-            requestBuffer_ = new Byte[MaxAccumBufferBytes];
+//            requestBuffer_ = new Byte[MaxAccumBufferBytes];
+            requestBuffer_ = new Request[256];
         }
 
         // Resetting the requests creator.
         public void Reset() {
             requestsCreator_.Reset();
+            WaitForBatch.Set();
         }
 
         // Gets next request batch.
-        public Request[] GetNextRequestBatch() {
-            return requestsCreator_.CreateLinearRequests(MaxAccumBufferBytes - MaxRequestBytes);
-            
-            // Diagnostics.
-            //Console.WriteLine("{0} requests sent", requestsCreator_.TotalRequestsProcessed);
+        public int GetNextRequestBatch(out Request[] buffer) {
+            WaitForBatch.WaitOne();
+            int count = requestsCreator_.CreateLinearRequests(requestBuffer_);
+            WaitForBatch.Reset();
+            buffer = requestBuffer_;
+            return count;
+        }
+
+        public void SignalBatchFinished() {
+            WaitForBatch.Set();
         }
     }
 }
