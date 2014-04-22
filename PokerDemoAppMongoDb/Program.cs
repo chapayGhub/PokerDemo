@@ -44,6 +44,21 @@ namespace PokerDemoAppMongoDb {
                 return 201;
             });
 
+            Handle.GET(8082, "/dashboard/{?}", (int playerId) => {
+                var json = new PlayerAndAccounts();
+                var query = Query<Player>.EQ(p => p.PlayerId, playerId);
+                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                json.PlayerId = player.PlayerId;
+                json.FullName = player.FullName;
+                foreach (Account account in player.Accounts) {
+                    var a = json.Accounts.Add();
+                    a.AccountId = account.AccountId;
+                    a.Balance = account.Balance;
+                }
+
+                return json;
+            });
+
             Handle.DELETE(8082, "/all", () => {
                 Mongo.Db.GetCollection("Players").RemoveAll();
                 Mongo.Db.GetCollection("Accounts").RemoveAll();
