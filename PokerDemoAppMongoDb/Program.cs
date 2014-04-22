@@ -59,6 +59,15 @@ namespace PokerDemoAppMongoDb {
                 return json;
             });
 
+            Handle.GET(8082, "/players?f={?}", (string fullName) => {
+                var json = new PlayerAndAccounts();
+                var query = Query<Player>.EQ(p => p.FullName, fullName);
+                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                json.PlayerId = player.PlayerId;
+                json.FullName = player.FullName;
+                return json;
+            });
+
             Handle.DELETE(8082, "/all", () => {
                 Mongo.Db.GetCollection("Players").RemoveAll();
                 Mongo.Db.GetCollection("Accounts").RemoveAll();
