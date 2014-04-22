@@ -68,6 +68,19 @@ namespace PokerDemoAppMongoDb {
                 return json;
             });
 
+            Handle.POST(8082, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
+                var accounts = Mongo.Db.GetCollection("Accounts");
+                var query = Query<Account>.EQ(a => a.AccountId, fromId);
+                Account source = accounts.FindOneAs<Account>(query);
+                query = Query<Account>.EQ(a => a.AccountId, toId);
+                Account target = accounts.FindOneAs<Account>(query);
+                source.Balance -= amount;
+                target.Balance += amount;
+                accounts.Save(source);
+                accounts.Save(target);
+                return 200;
+            });
+
             Handle.DELETE(8082, "/all", () => {
                 Mongo.Db.GetCollection("Players").RemoveAll();
                 Mongo.Db.GetCollection("Accounts").RemoveAll();
