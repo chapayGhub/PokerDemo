@@ -4,6 +4,6 @@ using Starcounter;
 
 namespace Vendigo {
     public interface IResponseHandler {
-        void ProcessResponseBatch(Response[] responseBatch, int count);
+        void ProcessResponse(Response response);
     }
 }

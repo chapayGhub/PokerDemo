@@ -135,8 +135,7 @@ namespace ClientEngine {
 
         // Creates linear requests one type after another.
         public unsafe int CreateLinearRequests(Request[] requestBuffer) {
-            UInt32 offset = 0;
-            
+           
             // Checking if we are in preparation phase.
             if (gui_.IsPreparationPhase) {
                 // Checking if we need to wait for certain amount of responses.
@@ -151,6 +150,7 @@ namespace ClientEngine {
                 } else {
                     // Sending delete all command.
                     requestBuffer[0] = RequestGenerator.Delete();
+                    requestBuffer[0].ConstructFromFields();
 
                     // Disabling wait on next time.
                     numRespToWait_ = 1;
@@ -238,6 +238,7 @@ namespace ClientEngine {
                 }
 
                 requestBuffer[count] = request;
+                requestBuffer[count].ConstructFromFields();
                 count++;
 
                 // Updating the Gui if possible.

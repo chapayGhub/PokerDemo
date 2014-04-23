@@ -11,18 +11,17 @@ using Vendigo;
 
 namespace PlayersDemoGui {
     public class RequestProvider : IRequestProvider {
+
         // Maximum accumulative buffer size for requests batch (at least two MaxRequestBytes).
         public const Int32 MaxAccumBufferBytes = 50000;
         public const Int32 MaxRequestBytes = 1000;
-
-        public AutoResetEvent WaitForBatch = new AutoResetEvent(true);
+        public const Int32 MaxRequestsInBatch = 256;
 
         // Request generator.
         RequestsCreator requestsCreator_ = null;
 
-        // Batched request buffer.
-//        Byte[] requestBuffer_ = null;
-        Request[] requestBuffer_ = null;
+        // Batched requests batch.
+        Request[] requestsBatch_ = null;
 
         // Reference to Gui.
         InterfaceObject gui_ = null;
@@ -64,27 +63,19 @@ namespace PlayersDemoGui {
                 );
 
             gui_ = gui;
-//            requestBuffer_ = new Byte[MaxAccumBufferBytes];
-            requestBuffer_ = new Request[256];
+            requestsBatch_ = new Request[MaxRequestsInBatch];
         }
 
         // Resetting the requests creator.
         public void Reset() {
             requestsCreator_.Reset();
-            WaitForBatch.Set();
         }
 
         // Gets next request batch.
-        public int GetNextRequestBatch(out Request[] buffer) {
-            WaitForBatch.WaitOne();
-            int count = requestsCreator_.CreateLinearRequests(requestBuffer_);
-            WaitForBatch.Reset();
-            buffer = requestBuffer_;
+        public int GetNextRequestBatch(out Request[] requestsBatch) {
+            int count = requestsCreator_.CreateLinearRequests(requestsBatch_);
+            requestsBatch = requestsBatch_;
             return count;
-        }
-
-        public void SignalBatchFinished() {
-            WaitForBatch.Set();
         }
     }
 }

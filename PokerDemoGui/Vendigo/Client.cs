@@ -10,10 +10,10 @@ namespace Vendigo {
         private Thread sendThread_;
 
         public void Start(string hostName, ushort port, IResponseHandler responseHandler, IRequestProvider requestProvider) {
-            node_ = new Node(hostName, port);
+            node_ = new Node(hostName, port, 0, true);
             Console.WriteLine("Connection established.");
 
-            sendThread_ = new Thread(new ThreadStart(new Sender(node_, requestProvider, responseHandler).Main));
+            sendThread_ = new Thread(new ThreadStart(new Sender(node_, requestProvider, responseHandler).ClientSenderThread));
             sendThread_.Start();
         }
 

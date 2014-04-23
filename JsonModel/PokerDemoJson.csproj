@@ -9,8 +9,8 @@
     <ProjectGuid>{02206360-A581-4022-9B80-4AC6907B2591}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JsonModel</RootNamespace>
-    <AssemblyName>JsonModel</AssemblyName>
+    <RootNamespace>PokerDemoJson</RootNamespace>
+    <AssemblyName>PokerDemoJson</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <UseVSHostingProcess>false</UseVSHostingProcess>

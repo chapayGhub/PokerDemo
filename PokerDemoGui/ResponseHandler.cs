@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using Starcounter;
 using Vendigo;
+using System.Threading;
 
 namespace PlayersDemoGui {
     public class ResponseHandler : IResponseHandler {
         // Number of correct responses.
-        volatile Int32 numGoodResps_ = 0;
-
-        // Help string builder.
-        StringBuilder strBuilder_ = new StringBuilder();
+        Int32 numGoodResps_ = 0;
 
         // Reference to Gui.
         InterfaceObject gui_ = null;
@@ -39,51 +37,34 @@ namespace PlayersDemoGui {
         }
 
         // Batched response processor.
-        void IResponseHandler.ProcessResponseBatch(Response[] responseBatch, int count) {
+        void IResponseHandler.ProcessResponse(Response response) {
             
-            for (int i = 0; i < count; i++) {
-                var response = responseBatch[i];
+            try {
 
                 // Checking for correct status code.
                 if (response.StatusCode == 200 || response.StatusCode == 201) {
+
                     // Increasing number of good responses.
-                    numGoodResps_++;
+                    Interlocked.Increment(ref numGoodResps_);
 
                     // Diagnostics.
                     if ((numGoodResps_ % 100000) == 0)
                         Console.WriteLine("   {0} good responses of {1}", numGoodResps_, reqProvider_.RequestsCreator.TotalPlannedRequestsNum);
 
                     // Processing response body if it exists.
+                    if (response.ContentLength > 0) {
 
-                    IntPtr ptr;
-                    int size;
-
-                    response.GetBodyRaw(out ptr, out size);
-
-                    if (size > 0) {
                         // Checking the Gui paused flag.
                         if (!gui_.IsPaused) {
+
                             // Checking if we can update.
                             if (gui_.ResponseUpdateFlag) {
-                                PlayerAndAccounts p = new PlayerAndAccounts();
-
-                                p.PopulateFromJson(ptr, size);
-
-                                // Converting header to string.
-                                String header = response.Headers;
-
-                                // Deserializing header and body to string.
-                                strBuilder_.Append(header);
-                                strBuilder_.Append(p.ToJson());
-                                String decodedResponse = strBuilder_.ToString();
-                                strBuilder_.Clear();
-
-                                // Setting the decoded string.
-                                gui_.DecodedResponseString = decodedResponse; //.Insert(decodedResponse.IndexOf("L:") + 15, decodedBodyLen.ToString());
 
                                 // Creating encoded response string.
-                                //String encodedBody = ASCIIEncoding.ASCII.GetString(responseBatch.Body);
-                                String encodedResponse = header + p.ToJson();
+                                String encodedResponse = response.Body;
+
+                                // Setting the decoded string.
+                                gui_.DecodedResponseString = encodedResponse;
 
                                 // Setting the encoded string.
                                 gui_.EncodedResponseString = encodedResponse;
@@ -128,12 +109,15 @@ namespace PlayersDemoGui {
                     MessageBox.Show(response.Body, "Error occurred!");
                     throw new Exception("Bad response received when it should not!");
                 }
-            }
 
-            // Checking if we are done with processing.
-            if (numGoodResps_ >= reqProvider_.RequestsCreator.TotalPlannedRequestsNum) {
-                // Printing the score.
-                Console.WriteLine("Done!");
+                // Checking if we are done with processing.
+                if (numGoodResps_ >= reqProvider_.RequestsCreator.TotalPlannedRequestsNum) {
+                    // Printing the score.
+                    Console.WriteLine("Done!");
+                }
+
+            } catch (Exception exc) {
+                MessageBox.Show(exc.ToString(), "Error occurred!");
             }
         }
     }
