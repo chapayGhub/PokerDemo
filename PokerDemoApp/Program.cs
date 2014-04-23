@@ -40,11 +40,12 @@ namespace PokerDemoApp {
                 return 201;
             });
             
-            Handle.PUT("/players/{?}/name", (string playerId, string newName ) => {
+            Handle.PUT("/players/{?}/{?}", (string playerId, string newName ) => {
                 Db.Transaction( () => {
-                    var player = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
+                    var player = (Player) Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
                     player.FullName = newName;
                 });
+                return 200;
             } );
 
             Handle.POST("/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
@@ -64,10 +65,11 @@ namespace PokerDemoApp {
                 Db.Transaction(() => {
                     Account account = Db.SQL<Account>("SELECT a FROM Account a WHERE a.AccountId = ?", toId).First;
                     account.Balance += amount;
-                    if (source.Balance < 0 || target.Balance < 0 ) {
+                    if (account.Balance < 0) {
                         throw new Exception("You cannot withdraw money that is not in the account");
                     }
                 });
+
                 return 200;
             });
 
