@@ -64,6 +64,9 @@ namespace PokerDemoApp {
                 Db.Transaction(() => {
                     Account account = Db.SQL<Account>("SELECT a FROM Account a WHERE a.AccountId = ?", toId).First;
                     account.Balance += amount;
+                    if (source.Balance < 0 || target.Balance < 0 ) {
+                        throw new Exception("You cannot withdraw money that is not in the account");
+                    }
                 });
                 return 200;
             });
