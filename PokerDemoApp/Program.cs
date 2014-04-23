@@ -46,11 +46,11 @@ namespace PokerDemoApp {
                     Account target = Db.SQL<Account>("SELECT a FROM Account a WHERE AccountId = ?", toId).First;
                     source.Balance -= amount;
                     target.Balance += amount;
-                    if (source.Balance > 0 && target.Balance > 0 ) {
-                        return 200;
+                    if (source.Balance < 0 || target.Balance < 0 ) {
+                        throw new Exception("You cannot move money that is not in the account");
                     }
                 });
-                return 422;
+                return 200;
             });
 
             Handle.POST("/deposit?a={?}&x={?}", (int toId, int amount) => {
