@@ -1,6 +1,7 @@
 ﻿
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver.Builders;
 using System;
 using System.Collections.Generic;
 
@@ -12,9 +13,11 @@ namespace PokerDemoAppMongoDb {
         public string FullName { get; set; }
         
         [BsonIgnore]
-        public ICollection<Account> Accounts {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+        public IEnumerable<Account> Accounts {
+            get {
+                var query = Query<Account>.EQ(a => a.PlayerObjectId, Id);
+                return Mongo.Db.GetCollection("Accounts").FindAs<Account>(query);
+            }
         }
     }
 
