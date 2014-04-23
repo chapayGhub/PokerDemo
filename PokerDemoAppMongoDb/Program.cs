@@ -12,6 +12,39 @@ namespace PokerDemoAppMongoDb {
             var db = new MongoClient("mongodb://localhost").GetServer().GetDatabase("pokerdemo");
             Mongo.Db = db;
         }
+
+        public static void CreateIndexes() {
+            var players = Mongo.Db.GetCollection("Players");
+            var accounts = Mongo.Db.GetCollection("Accounts");
+
+            var name = "PlayerIdIndex";
+            var keys = IndexKeys.Ascending("PlayerId");
+            var options = IndexOptions.SetUnique(true).SetName(name);
+            if (!players.IndexExistsByName(name)) {
+                players.CreateIndex(keys, options);
+            }
+
+            name = "FullNameIndex";
+            keys = IndexKeys.Ascending("FullName");
+            options = IndexOptions.SetName(name);
+            if (!players.IndexExistsByName(name)) {
+                players.CreateIndex(keys, options);
+            }
+
+            name = "AccountIdIndex";
+            keys = IndexKeys.Ascending("AccountId");
+            options = IndexOptions.SetUnique(true).SetName(name);
+            if (!accounts.IndexExistsByName(name)) {
+                accounts.CreateIndex(keys, options);
+            }
+
+            name = "PlayerObjectIdIndex";
+            keys = IndexKeys.Ascending("PlayerObjectId");
+            options = IndexOptions.SetName(name);
+            if (!accounts.IndexExistsByName(name)) {
+                accounts.CreateIndex(keys, options);
+            }
+        }
     }
 
     #endregion
@@ -19,6 +52,7 @@ namespace PokerDemoAppMongoDb {
     class Program {
         static void Main() {
             Mongo.Init();
+            Mongo.CreateIndexes();
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
