@@ -39,6 +39,13 @@ namespace PokerDemoApp {
                 });
                 return 201;
             });
+            
+            Handle.PUT("/players/{?}/name", (string playerId, string newName ) => {
+                Db.Transaction( () => {
+                    var player = new Player { PlayerId = (int)json.PlayerId, FullName = json.FullName };
+                    player.FullName = newName;
+                });
+            } );
 
             Handle.POST("/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
                 Db.Transaction(() => {
