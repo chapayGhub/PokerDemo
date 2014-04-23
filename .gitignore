@@ -112,3 +112,4 @@ UpgradeLog*.XML
 
 # Bower tempoarary files
 .bower.json
+*.DotSettings
