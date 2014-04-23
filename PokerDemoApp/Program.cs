@@ -42,7 +42,7 @@ namespace PokerDemoApp {
             
             Handle.PUT("/players/{?}/name", (string playerId, string newName ) => {
                 Db.Transaction( () => {
-                    var player = new Player { PlayerId = (int)json.PlayerId, FullName = json.FullName };
+                    var player = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
                     player.FullName = newName;
                 });
             } );
