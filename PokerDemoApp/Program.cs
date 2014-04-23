@@ -44,9 +44,9 @@ namespace PokerDemoApp {
                 Db.Transaction(() => {
                     Account source = Db.SQL<Account>("SELECT a FROM Account a WHERE AccountId = ?", fromId).First;
                     Account target = Db.SQL<Account>("SELECT a FROM Account a WHERE AccountId = ?", toId).First;
+                    source.Balance -= amount;
+                    target.Balance += amount;
                     if (source.Balance > 0 && target.Balance > 0 ) {
-                        source.Balance -= amount;
-                        target.Balance += amount;
                         return 200;
                     }
                 });
