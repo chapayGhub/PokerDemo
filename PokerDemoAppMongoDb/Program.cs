@@ -2,20 +2,24 @@
 using Starcounter;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
+using System.Collections.Generic;
 
 namespace PokerDemoAppMongoDb {
 
     #region Helper class
     internal static class Mongo {
+        static Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
         public static MongoDatabase Db;
         public static void Init() {
             var db = new MongoClient("mongodb://localhost").GetServer().GetDatabase("pokerdemo");
             Mongo.Db = db;
+            collectionNames.Add(typeof(Player), "Players");
+            collectionNames.Add(typeof(Account), "Accounts");
         }
 
         public static void CreateIndexes() {
-            var players = Mongo.Db.GetCollection("Players");
-            var accounts = Mongo.Db.GetCollection("Accounts");
+            var players = Mongo.Db.Collection<Player>();
+            var accounts = Mongo.Db.Collection<Account>();
 
             var name = "PlayerIdIndex";
             var keys = IndexKeys.Ascending("PlayerId");
@@ -45,6 +49,10 @@ namespace PokerDemoAppMongoDb {
                 accounts.CreateIndex(keys, options);
             }
         }
+
+        public static MongoCollection<TDomainClass> Collection<TDomainClass>(this MongoDatabase db) {
+            return Mongo.Db.GetCollection<TDomainClass>(collectionNames[typeof(TDomainClass)]);
+        }
     }
 
     #endregion
@@ -57,7 +65,7 @@ namespace PokerDemoAppMongoDb {
             Handle.GET(8082, "/players/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
                 var query = Query<Player>.EQ(p => p.PlayerId, playerId);
-                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 json.PlayerId = player.PlayerId;
                 json.FullName = player.FullName;
                 return json;
@@ -65,7 +73,7 @@ namespace PokerDemoAppMongoDb {
 
             Handle.PUT(8082, "/players/{?}", (int playerId, PlayerAndAccounts json) => {
                 var player = new Player() { PlayerId = playerId, FullName = json.FullName };
-                Mongo.Db.GetCollection("Players").Insert(player);
+                Mongo.Db.Collection<Player>().Insert(player);
                 foreach (var a in json.Accounts) {
                     var account = new Account {
                         AccountId = (int)a.AccountId,
@@ -73,7 +81,7 @@ namespace PokerDemoAppMongoDb {
                         Balance = (int)a.Balance,
                         Player = player
                     };
-                    Mongo.Db.GetCollection("Accounts").Insert(account);
+                    Mongo.Db.Collection<Account>().Insert(account);
                 }
                 return 201;
             });
@@ -81,7 +89,7 @@ namespace PokerDemoAppMongoDb {
             Handle.GET(8082, "/dashboard/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
                 var query = Query<Player>.EQ(p => p.PlayerId, playerId);
-                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 json.PlayerId = player.PlayerId;
                 json.FullName = player.FullName;
                 foreach (Account account in player.Accounts) {
@@ -96,14 +104,14 @@ namespace PokerDemoAppMongoDb {
             Handle.GET(8082, "/players?f={?}", (string fullName) => {
                 var json = new PlayerAndAccounts();
                 var query = Query<Player>.EQ(p => p.FullName, fullName);
-                var player = Mongo.Db.GetCollection("Players").FindOneAs<Player>(query);
+                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 json.PlayerId = player.PlayerId;
                 json.FullName = player.FullName;
                 return json;
             });
 
             Handle.POST(8082, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
-                var accounts = Mongo.Db.GetCollection("Accounts");
+                var accounts = Mongo.Db.Collection<Account>();
                 var query = Query<Account>.EQ(a => a.AccountId, fromId);
                 Account source = accounts.FindOneAs<Account>(query);
                 query = Query<Account>.EQ(a => a.AccountId, toId);
@@ -116,7 +124,7 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.POST(8082, "/deposit?a={?}&x={?}", (int toId, int amount) => {
-                var accounts = Mongo.Db.GetCollection("Accounts");
+                var accounts = Mongo.Db.Collection<Account>();
                 var query = Query<Account>.EQ(a => a.AccountId, toId);
                 var account = accounts.FindOneAs<Account>(query);
                 account.Balance += amount;
@@ -125,8 +133,8 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.DELETE(8082, "/all", () => {
-                Mongo.Db.GetCollection("Players").RemoveAll();
-                Mongo.Db.GetCollection("Accounts").RemoveAll();
+                Mongo.Db.Collection<Player>().RemoveAll();
+                Mongo.Db.Collection<Account>().RemoveAll();
                 return 200;
             });
         }
