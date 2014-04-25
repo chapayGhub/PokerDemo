@@ -1,7 +1,7 @@
-﻿using System;
-using Starcounter;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using MongoDB.Driver.Builders;
+using Starcounter;
+using System;
 using System.Collections.Generic;
 
 namespace PokerDemoAppMongoDb {
@@ -111,15 +111,54 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.POST(8082, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
+                // TODO: Testing - test behaviour with negative amount
+
                 var accounts = Mongo.Db.Collection<Account>();
                 var query = Query<Account>.EQ(a => a.AccountId, fromId);
-                Account source = accounts.FindOneAs<Account>(query);
+                var source = accounts.FindOneAs<Account>(query);
                 query = Query<Account>.EQ(a => a.AccountId, toId);
-                Account target = accounts.FindOneAs<Account>(query);
+                var target = accounts.FindOneAs<Account>(query);
+
                 source.Balance -= amount;
                 target.Balance += amount;
+                if (source.Balance < 0 || target.Balance < 0) {
+                    throw new Exception("You cannot move money that is not in the account");
+                }
+
+                var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
+                var transaction = new AccountBalanceTransaction() {
+                    From = source.Id,
+                    To = target.Id,
+                    Amount = amount,
+                    State = AccountBalanceTransaction.States.Pending  // Skip the "Initial" state, as we don't really differentiate between the two
+                };
+                transactions.Insert(transaction);
+
+                try {
+                    source.PendingTransactions.Add(transaction.Id);
+                    target.PendingTransactions.Add(transaction.Id);
+                    accounts.Save(source);
+                    accounts.Save(target);
+                    transaction.State = AccountBalanceTransaction.States.Committed;
+                    transactions.Save(transaction);
+                } catch {
+                    Console.WriteLine("Rollback!");
+                    throw;
+                }
+
+                // The transaction is considered committed and the database is
+                // in a consistent state. Clean up the transaction and the
+                // accounts, but never mind trying to do better here. If anything
+                // fails now, a recovery will remedy eventually (and all state
+                // is fine in a business-perspective).
+
+                source.PendingTransactions.Remove(transaction.Id);
+                target.PendingTransactions.Remove(transaction.Id);
+                transaction.State = AccountBalanceTransaction.States.Done;
                 accounts.Save(source);
                 accounts.Save(target);
+                transactions.Save(transaction);
+
                 return 200;
             });
 
