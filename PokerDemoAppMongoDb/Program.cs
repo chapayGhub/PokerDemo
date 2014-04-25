@@ -15,6 +15,7 @@ namespace PokerDemoAppMongoDb {
             Mongo.Db = db;
             collectionNames.Add(typeof(Player), "Players");
             collectionNames.Add(typeof(Account), "Accounts");
+            collectionNames.Add(typeof(AccountBalanceTransaction), "Transactions");
         }
 
         public static void CreateIndexes() {
@@ -197,6 +198,7 @@ namespace PokerDemoAppMongoDb {
             Handle.DELETE(8082, "/all", () => {
                 Mongo.Db.Collection<Player>().RemoveAll();
                 Mongo.Db.Collection<Account>().RemoveAll();
+                Mongo.Db.Collection<AccountBalanceTransaction>().RemoveAll();
                 return 200;
             });
         }
