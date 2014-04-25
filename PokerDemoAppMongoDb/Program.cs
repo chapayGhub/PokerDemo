@@ -136,7 +136,7 @@ namespace PokerDemoAppMongoDb {
                 var accountQuery = Query<Account>.EQ(a => a.AccountId, toId);
                 query = amount >= 0 
                     ? accountQuery 
-                    : Query.And(accountQuery, Query.GTE("Balance", amount));
+                    : Query.And(accountQuery, Query.GTE("Balance", Math.Abs(amount)));
 
                 var accounts = Mongo.Db.Collection<Account>();
                 var args = new FindAndModifyArgs() {
