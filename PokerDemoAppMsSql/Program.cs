@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Transactions;
 using System.Linq;
 using Starcounter;
+using System.Data.Entity;
 
 namespace PokerDemoAppMsSql {
     class Program {
@@ -124,7 +125,8 @@ namespace PokerDemoAppMsSql {
         // Init indexes and snapshot isolation
         private static void InitDb() {
             using (var db = new PlayersDemoDb()) {
-//                db.Database.ExecuteSqlCommand("ALTER DATABASE \"PlayersDemoDb\" SET ALLOW_SNAPSHOT_ISOLATION ON");
+                //Reference: Set TransactionalBehavior.DoNotEnsureTransaction in ExecuteSqlCommand http://www.danbartram.com/entity-framework-6-and-executesqlcommand/
+                db.Database.ExecuteSqlCommand(TransactionalBehavior.DoNotEnsureTransaction, "ALTER DATABASE \"PlayersDemoDb\" SET ALLOW_SNAPSHOT_ISOLATION ON");
                 try {
                     db.Database.ExecuteSqlCommand("CREATE INDEX Account_fk ON dbo.Accounts(Player_PlayerId,AccountId)");
                     db.Database.ExecuteSqlCommand("CREATE INDEX PlayerNameIndx ON dbo.Players(FullName)");

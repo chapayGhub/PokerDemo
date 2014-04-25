@@ -4,12 +4,13 @@ using System.Data.Entity;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PokerDemoAppMsSql {
     // Represents any type of player: poker, domino, darts, etc.
     public class Player {
         // Unique player identifier.
-//        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Int32 PlayerId { get; set; }
 
         // Player's full name. Limit according to UK standard (stackoverflow).
@@ -23,7 +24,7 @@ namespace PokerDemoAppMsSql {
     // Represents one of player's accounts.
     public class Account {
         // Unique account identifier.
-//        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Int32 AccountId { get; set; }
 
         // Type of account.
@@ -49,6 +50,7 @@ namespace PokerDemoAppMsSql {
             _connection = "Server=" + CompName + "\\" + SrvName + ";Initial Catalog=PlayersDemoDb;Integrated Security=SSPI";
             return _connection;
         }
-        public PlayersDemoDb() : base(_connection) { }
+        public PlayersDemoDb() : base(_connection) {
+        }
     }
 }
