@@ -61,6 +61,7 @@ namespace PokerDemoAppMongoDb {
         static void Main() {
             Mongo.Init();
             Mongo.CreateIndexes();
+            FindAndRecoverTransactionsNotDone();
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
@@ -198,6 +199,14 @@ namespace PokerDemoAppMongoDb {
                 Mongo.Db.Collection<Account>().RemoveAll();
                 return 200;
             });
+        }
+
+        static void FindAndRecoverTransactionsNotDone() {
+            var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
+            var notDone = transactions.Find(Query<AccountBalanceTransaction>.NE(a => a.State, AccountBalanceTransaction.States.Done));
+            foreach (var t in notDone) {
+                Console.WriteLine(t.ToString());
+            }
         }
     }
 }
