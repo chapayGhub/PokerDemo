@@ -124,12 +124,34 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.POST(8082, "/deposit?a={?}&x={?}", (int toId, int amount) => {
+                // We want to deposit [amount] to the balance of the given
+                // account, failing either if the account does not exist or if
+                // the result is a negative balance.
+                // We can use FindAndModify, that allows an atomic find/write.
+                // We create a query where we allow the increase if the amount
+                // is either positive or if the balance is at least as big as
+                // the amount if negative.
+
+                IMongoQuery query;
+                var accountQuery = Query<Account>.EQ(a => a.AccountId, toId);
+                query = amount >= 0 
+                    ? accountQuery 
+                    : Query.And(accountQuery, Query.GTE("Balance", amount));
+
                 var accounts = Mongo.Db.Collection<Account>();
-                var query = Query<Account>.EQ(a => a.AccountId, toId);
-                var account = accounts.FindOneAs<Account>(query);
-                account.Balance += amount;
-                accounts.Save(account);
-                return 200;
+                var args = new FindAndModifyArgs() {
+                     Query = query,
+                     Update = Update.Inc("Balance", amount),
+                     Upsert = false,
+                     VersionReturned = FindAndModifyDocumentVersion.Modified
+                };
+                var result = accounts.FindAndModify(args);
+                if (result.Ok && result.ModifiedDocument != null) {
+                    return 200;
+                }
+
+                throw new Exception(
+                    string.Format("Unable to deposit {0} to account with ID {1}: {2}", amount, toId, result.ErrorMessage ?? string.Empty));
             });
 
             Handle.DELETE(8082, "/all", () => {
