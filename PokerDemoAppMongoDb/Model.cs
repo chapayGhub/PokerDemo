@@ -46,6 +46,24 @@ namespace PokerDemoAppMongoDb {
             public const string Cancelling = "Cancelling";
         }
 
+        public bool IsPending {
+            get {
+                return State.Equals(States.Pending);
+            }
+        }
+
+        public bool IsCommitted {
+            get {
+                return State.Equals(States.Committed);
+            }
+        }
+
+        public bool IsDone {
+            get {
+                return State.Equals(States.Done);
+            }
+        }
+
         public ObjectId Id { get; set; }
         public ObjectId From { get; set; }
         public ObjectId To { get; set; }
