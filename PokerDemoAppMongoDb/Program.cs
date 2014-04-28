@@ -9,7 +9,7 @@ namespace PokerDemoAppMongoDb {
         static void Main() {
             Mongo.Init();
             CreateIndexes();
-            FindAndRecoverTransactionsNotDone();
+            ProcessTransactionsNotDone();
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
@@ -177,7 +177,7 @@ namespace PokerDemoAppMongoDb {
             }
         }
 
-        static void FindAndRecoverTransactionsNotDone() {
+        static void ProcessTransactionsNotDone() {
             var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
             var notDone = transactions.Find(Query<AccountBalanceTransaction>.NE(a => a.State, AccountBalanceTransaction.States.Done));
             foreach (var t in notDone) {
