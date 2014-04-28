@@ -91,7 +91,7 @@ namespace PokerDemoAppMongoDb {
                     transaction.State = AccountBalanceTransaction.States.Committed;
                     transactions.Save(transaction);
                 } catch {
-                    Console.WriteLine("Rollback!");
+                    TransactionManager.RollbackPending(transaction);
                     throw;
                 }
 
@@ -101,13 +101,7 @@ namespace PokerDemoAppMongoDb {
                 // fails now, a recovery will remedy eventually (and all state
                 // is fine in a business-perspective).
 
-                source.PendingTransactions.Remove(transaction.Id);
-                target.PendingTransactions.Remove(transaction.Id);
-                transaction.State = AccountBalanceTransaction.States.Done;
-                accounts.Save(source);
-                accounts.Save(target);
-                transactions.Save(transaction);
-
+                TransactionManager.UpdateAsDone(transaction, transactions, accounts, source, target);
                 return 200;
             });
 
@@ -187,16 +181,17 @@ namespace PokerDemoAppMongoDb {
             var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
             var notDone = transactions.Find(Query<AccountBalanceTransaction>.NE(a => a.State, AccountBalanceTransaction.States.Done));
             foreach (var t in notDone) {
-                Console.WriteLine(t.ToString());
+                if (t.IsPending) {
+                    TransactionManager.RollbackPending(t);
+                } else if (t.IsCommitted) {
+                    TransactionManager.RecoverCommitted(t);
+                } else {
+                    // Transaction with a state we don't recognize. We refuse
+                    // to try anything automatic - manual help required.
+                    throw new Exception(
+                        string.Format("Transaction with ID {0} is in a state ({1}) we can not automatically recover.", t.Id, t.State));
+                }
             }
-
-            // If "committed" but not "done" - just do the last step, removing it
-            // from each account, make it "done".
-
-            // If it's pending, we do a rollback, meaning we reverse the amout from
-            // both accounts.
-
-
         }
     }
 }
