@@ -2,66 +2,13 @@
 using MongoDB.Driver.Builders;
 using Starcounter;
 using System;
-using System.Collections.Generic;
 
 namespace PokerDemoAppMongoDb {
-
-    #region Helper class
-    internal static class Mongo {
-        static Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
-        public static MongoDatabase Db;
-        public static void Init() {
-            var db = new MongoClient("mongodb://localhost").GetServer().GetDatabase("pokerdemo");
-            Mongo.Db = db;
-            collectionNames.Add(typeof(Player), "Players");
-            collectionNames.Add(typeof(Account), "Accounts");
-            collectionNames.Add(typeof(AccountBalanceTransaction), "Transactions");
-        }
-
-        public static void CreateIndexes() {
-            var players = Mongo.Db.Collection<Player>();
-            var accounts = Mongo.Db.Collection<Account>();
-
-            var name = "PlayerIdIndex";
-            var keys = IndexKeys.Ascending("PlayerId");
-            var options = IndexOptions.SetUnique(true).SetName(name);
-            if (!players.IndexExistsByName(name)) {
-                players.CreateIndex(keys, options);
-            }
-
-            name = "FullNameIndex";
-            keys = IndexKeys.Ascending("FullName");
-            options = IndexOptions.SetName(name);
-            if (!players.IndexExistsByName(name)) {
-                players.CreateIndex(keys, options);
-            }
-
-            name = "AccountIdIndex";
-            keys = IndexKeys.Ascending("AccountId");
-            options = IndexOptions.SetUnique(true).SetName(name);
-            if (!accounts.IndexExistsByName(name)) {
-                accounts.CreateIndex(keys, options);
-            }
-
-            name = "PlayerObjectIdIndex";
-            keys = IndexKeys.Ascending("PlayerObjectId");
-            options = IndexOptions.SetName(name);
-            if (!accounts.IndexExistsByName(name)) {
-                accounts.CreateIndex(keys, options);
-            }
-        }
-
-        public static MongoCollection<TDomainClass> Collection<TDomainClass>(this MongoDatabase db) {
-            return Mongo.Db.GetCollection<TDomainClass>(collectionNames[typeof(TDomainClass)]);
-        }
-    }
-
-    #endregion
 
     class Program {
         static void Main() {
             Mongo.Init();
-            Mongo.CreateIndexes();
+            CreateIndexes();
             FindAndRecoverTransactionsNotDone();
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
@@ -203,12 +150,53 @@ namespace PokerDemoAppMongoDb {
             });
         }
 
+        public static void CreateIndexes() {
+            var players = Mongo.Db.Collection<Player>();
+            var accounts = Mongo.Db.Collection<Account>();
+
+            var name = "PlayerIdIndex";
+            var keys = IndexKeys.Ascending("PlayerId");
+            var options = IndexOptions.SetUnique(true).SetName(name);
+            if (!players.IndexExistsByName(name)) {
+                players.CreateIndex(keys, options);
+            }
+
+            name = "FullNameIndex";
+            keys = IndexKeys.Ascending("FullName");
+            options = IndexOptions.SetName(name);
+            if (!players.IndexExistsByName(name)) {
+                players.CreateIndex(keys, options);
+            }
+
+            name = "AccountIdIndex";
+            keys = IndexKeys.Ascending("AccountId");
+            options = IndexOptions.SetUnique(true).SetName(name);
+            if (!accounts.IndexExistsByName(name)) {
+                accounts.CreateIndex(keys, options);
+            }
+
+            name = "PlayerObjectIdIndex";
+            keys = IndexKeys.Ascending("PlayerObjectId");
+            options = IndexOptions.SetName(name);
+            if (!accounts.IndexExistsByName(name)) {
+                accounts.CreateIndex(keys, options);
+            }
+        }
+
         static void FindAndRecoverTransactionsNotDone() {
             var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
             var notDone = transactions.Find(Query<AccountBalanceTransaction>.NE(a => a.State, AccountBalanceTransaction.States.Done));
             foreach (var t in notDone) {
                 Console.WriteLine(t.ToString());
             }
+
+            // If "committed" but not "done" - just do the last step, removing it
+            // from each account, make it "done".
+
+            // If it's pending, we do a rollback, meaning we reverse the amout from
+            // both accounts.
+
+
         }
     }
 }
