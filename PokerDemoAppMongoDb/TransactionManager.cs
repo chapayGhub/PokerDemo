@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,15 @@ namespace PokerDemoAppMongoDb {
         }
 
         public static void RecoverCommitted(AccountBalanceTransaction transaction) {
+            throw new NotImplementedException();
+        }
+
+        public static void UpdateAsDone(
+            AccountBalanceTransaction transaction,
+            MongoCollection<AccountBalanceTransaction> transactions,
+            MongoCollection<Account> accounts,
+            Account sourceAccount,
+            Account targetAccount) {
             throw new NotImplementedException();
         }
     }
