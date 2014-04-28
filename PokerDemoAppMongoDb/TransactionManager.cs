@@ -35,7 +35,12 @@ namespace PokerDemoAppMongoDb {
             MongoCollection<Account> accounts,
             Account sourceAccount,
             Account targetAccount) {
-            throw new NotImplementedException();
+            sourceAccount.PendingTransactions.Remove(transaction.Id);
+            targetAccount.PendingTransactions.Remove(transaction.Id);
+            transaction.State = AccountBalanceTransaction.States.Done;
+            accounts.Save(sourceAccount);
+            accounts.Save(targetAccount);
+            transactions.Save(transaction);
         }
     }
 }
