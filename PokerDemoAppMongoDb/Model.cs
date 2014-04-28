@@ -28,12 +28,29 @@ namespace PokerDemoAppMongoDb {
         public int Balance { get; set; }
         public ObjectId PlayerObjectId { get; set; }
         [BsonRepresentation(BsonType.Array)]
-        public List<ObjectId> PendingTransactions { get; set; }
+        private List<ObjectId> PendingTransactions { get; set; }
 
         [BsonIgnore]
         public Player Player {
             get { return Mongo.Db.Collection<Player>().FindOneByIdAs<Player>(PlayerObjectId); }
             set { PlayerObjectId = value.Id; }
+        }
+
+        public void AddTransaction(AccountBalanceTransaction transaction) {
+            var pending = PendingTransactions;
+            if (pending == null) {
+                pending = PendingTransactions = new List<ObjectId>();
+            }
+            pending.Add(transaction.Id);
+        }
+
+        public bool RemoveTransaction(AccountBalanceTransaction transaction) {
+            var pending = PendingTransactions;
+            return pending == null ? false : pending.Remove(transaction.Id);
+        }
+
+        public bool ContainsTransaction(AccountBalanceTransaction transaction) {
+            return PendingTransactions == null ? false : PendingTransactions.Contains(transaction.Id);
         }
     }
 
