@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using MongoDB.Driver.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,32 @@ namespace PokerDemoAppMongoDb {
     internal static class TransactionManager {
 
         public static void RollbackPending(AccountBalanceTransaction transaction) {
-            throw new NotImplementedException();
+            var accounts = Mongo.Db.Collection<Account>();
+            var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
+
+            var source = accounts.FindOneByIdAs<Account>(transaction.From);
+            var target = accounts.FindOneByIdAs<Account>(transaction.To);
+            if (source == null || target == null) {
+                throw new Exception(
+                    string.Format("Transaction with ID {0} in {1} can not be recovered - at least one of the accounts are missing.",
+                    transaction.Id, transaction.State)
+                    );
+            }
+
+            if (source.PendingTransactions.Contains(transaction.Id)) {
+                source.Balance += transaction.Amount;
+                source.PendingTransactions.Remove(transaction.Id);
+                accounts.Save(source);
+            }
+
+            if (target.PendingTransactions.Contains(transaction.Id)) {
+                target.Balance -= transaction.Amount;
+                target.PendingTransactions.Remove(transaction.Id);
+                accounts.Save(target);
+            }
+
+            var q = Query<AccountBalanceTransaction>.EQ(t => t.Id, transaction.Id);
+            transactions.Remove(q, RemoveFlags.Single);
         }
 
         public static void RecoverCommitted(AccountBalanceTransaction transaction) {
