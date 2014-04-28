@@ -26,7 +26,18 @@ namespace PokerDemoAppMongoDb {
         }
 
         public static void RecoverCommitted(AccountBalanceTransaction transaction) {
-            throw new NotImplementedException();
+            var accounts = Mongo.Db.Collection<Account>();
+            var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
+            var source = accounts.FindOneByIdAs<Account>(transaction.From);
+            var target = accounts.FindOneByIdAs<Account>(transaction.To);
+            if (source == null || target == null) {
+                throw new Exception(
+                    string.Format("Transaction with ID {0} in {1} can not be recovered - at least one of the accounts are missing.", 
+                    transaction.Id, transaction.State)
+                    );
+            }
+
+            UpdateAsDone(transaction, transactions, accounts, source, target);
         }
 
         public static void UpdateAsDone(
