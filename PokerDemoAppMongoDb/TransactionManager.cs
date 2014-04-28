@@ -35,15 +35,15 @@ namespace PokerDemoAppMongoDb {
                     );
             }
 
-            if (source.PendingTransactions.Contains(transaction.Id)) {
+            if (source.ContainsTransaction(transaction)) {
                 source.Balance += transaction.Amount;
-                source.PendingTransactions.Remove(transaction.Id);
+                source.RemoveTransaction(transaction);
                 accounts.Save(source);
             }
 
-            if (target.PendingTransactions.Contains(transaction.Id)) {
+            if (target.ContainsTransaction(transaction)) {
                 target.Balance -= transaction.Amount;
-                target.PendingTransactions.Remove(transaction.Id);
+                target.RemoveTransaction(transaction);
                 accounts.Save(target);
             }
 
@@ -72,8 +72,8 @@ namespace PokerDemoAppMongoDb {
             MongoCollection<Account> accounts,
             Account sourceAccount,
             Account targetAccount) {
-            sourceAccount.PendingTransactions.Remove(transaction.Id);
-            targetAccount.PendingTransactions.Remove(transaction.Id);
+            sourceAccount.RemoveTransaction(transaction);
+            targetAccount.RemoveTransaction(transaction);
             transaction.State = AccountBalanceTransaction.States.Done;
             accounts.Save(sourceAccount);
             accounts.Save(targetAccount);

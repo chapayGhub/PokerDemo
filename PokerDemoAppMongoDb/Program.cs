@@ -84,8 +84,8 @@ namespace PokerDemoAppMongoDb {
                 transactions.Insert(transaction);
 
                 try {
-                    source.PendingTransactions.Add(transaction.Id);
-                    target.PendingTransactions.Add(transaction.Id);
+                    source.AddTransaction(transaction);
+                    target.AddTransaction(transaction);
                     accounts.Save(source);
                     accounts.Save(target);
                     transaction.State = AccountBalanceTransaction.States.Committed;
