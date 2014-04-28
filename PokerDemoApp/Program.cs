@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Starcounter;
+//using PokerDemo;
 
 namespace PokerDemoApp {
     class Program {
@@ -8,7 +9,7 @@ namespace PokerDemoApp {
             CreateIndexes();
 
             Handle.GET("/players/{?}", (int playerId) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
                 return json;
             });
@@ -20,7 +21,7 @@ namespace PokerDemoApp {
             });
 
             Handle.GET("/players?f={?}", (string fullName) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE FullName = ?", fullName).First;
                 return json;
             });
