@@ -27,8 +27,9 @@ namespace PokerDemoAppMongoDb {
         public int AccountType { get; set; }
         public int Balance { get; set; }
         public ObjectId PlayerObjectId { get; set; }
-        [BsonRepresentation(BsonType.Array)]
-        private List<ObjectId> PendingTransactions { get; set; }
+        
+        // [BsonRepresentation(BsonType.Array)]
+        public List<ObjectId> PendingTransactions { get; set; }
 
         [BsonIgnore]
         public Player Player {
