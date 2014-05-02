@@ -6,6 +6,8 @@ using System;
 namespace PokerDemoAppMongoDb {
 
     class Program {
+        static object _lock = new object();
+
         static void Main() {
             Mongo.Init();
             CreateIndexes();
@@ -60,48 +62,51 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.POST(8082, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
-                // TODO: Testing - test behaviour with negative amount
+                lock (_lock) {
+                    var accounts = Mongo.Db.Collection<Account>();
+                    var query = Query<Account>.EQ(a => a.AccountId, fromId);
+                    var source = accounts.FindOneAs<Account>(query);
+                    query = Query<Account>.EQ(a => a.AccountId, toId);
+                    var target = accounts.FindOneAs<Account>(query);
 
-                var accounts = Mongo.Db.Collection<Account>();
-                var query = Query<Account>.EQ(a => a.AccountId, fromId);
-                var source = accounts.FindOneAs<Account>(query);
-                query = Query<Account>.EQ(a => a.AccountId, toId);
-                var target = accounts.FindOneAs<Account>(query);
+                    source.Balance -= amount;
+                    target.Balance += amount;
+                    // The client currently doesn't handle this - the result is a dialog window.
+                    // Disabling this until fixed.
+                    //if (source.Balance < 0 || target.Balance < 0) {
+                    //    throw new Exception("You cannot move money that is not in the account");
+                    //}
 
-                source.Balance -= amount;
-                target.Balance += amount;
-                if (source.Balance < 0 || target.Balance < 0) {
-                    throw new Exception("You cannot move money that is not in the account");
+                    var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
+                    var transaction = new AccountBalanceTransaction() {
+                        From = source.Id,
+                        To = target.Id,
+                        Amount = amount,
+                        State = AccountBalanceTransaction.States.Pending  // Skip the "Initial" state, as we don't really differentiate between the two
+                    };
+                    transactions.Insert(transaction);
+
+                    try {
+                        source.AddTransaction(transaction);
+                        target.AddTransaction(transaction);
+                        accounts.Save(source);
+                        accounts.Save(target);
+                        transaction.State = AccountBalanceTransaction.States.Committed;
+                        transactions.Save(transaction);
+                    } catch {
+                        TransactionManager.RollbackPending(transaction);
+                        throw;
+                    }
+
+                    // The transaction is considered committed and the database is
+                    // in a consistent state. Clean up the transaction and the
+                    // accounts, but never mind trying to do better here. If anything
+                    // fails now, a recovery will remedy eventually (and all state
+                    // is fine in a business-perspective).
+
+                    TransactionManager.UpdateAsDone(transaction, transactions, accounts, source, target);
                 }
 
-                var transactions = Mongo.Db.Collection<AccountBalanceTransaction>();
-                var transaction = new AccountBalanceTransaction() {
-                    From = source.Id,
-                    To = target.Id,
-                    Amount = amount,
-                    State = AccountBalanceTransaction.States.Pending  // Skip the "Initial" state, as we don't really differentiate between the two
-                };
-                transactions.Insert(transaction);
-
-                try {
-                    source.AddTransaction(transaction);
-                    target.AddTransaction(transaction);
-                    accounts.Save(source);
-                    accounts.Save(target);
-                    transaction.State = AccountBalanceTransaction.States.Committed;
-                    transactions.Save(transaction);
-                } catch {
-                    TransactionManager.RollbackPending(transaction);
-                    throw;
-                }
-
-                // The transaction is considered committed and the database is
-                // in a consistent state. Clean up the transaction and the
-                // accounts, but never mind trying to do better here. If anything
-                // fails now, a recovery will remedy eventually (and all state
-                // is fine in a business-perspective).
-
-                TransactionManager.UpdateAsDone(transaction, transactions, accounts, source, target);
                 return 200;
             });
 
