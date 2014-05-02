@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:PlayersDemoGui"
          Background="#ff303030"
         TextElement.Foreground="#ffffffff"
-        Title="Starcounter vs. MS SQL Server" 
+        Title="{Binding RaceTitle}" 
         Width="800" Height="600">
 
 
@@ -455,7 +455,7 @@
                     <Border Margin="5,10,5,0" BorderBrush="#00ffffff" BorderThickness="0,0,0,0" CornerRadius="5">
 
                         <StackPanel Margin="0">
-                            <TextBlock Margin="0,5,0,0" TextAlignment="Center" TextElement.FontSize="50" Text="Starcounter vs. MS SQL Server" TextWrapping="Wrap" />
+                            <TextBlock Margin="0,5,0,0" TextAlignment="Center" TextElement.FontSize="50" Text="{Binding RaceTitle}" TextWrapping="Wrap" />
                             <TextBlock Foreground="#ffd0d0d0" Margin="0,0,0,5" TextAlignment="Center" TextWrapping="Wrap" Text="This illustrates a Poker application." />
                             <TextBlock  Foreground="#ffd0d0d0" Margin="0,0,0,5" TextAlignment="Center" TextWrapping="Wrap" Text="Please modify number of database transactions to be performed and press Run"/>
                         </StackPanel>
@@ -591,7 +591,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Microsoft SQL Server 2012 Enterprise -->
+                            <!-- Database competitor area -->
                             <Border Grid.Column="2" Margin="10,5,0,5" Padding="10" BorderBrush="#60ffffff" CornerRadius="0" >
                                 <Border.Background>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -601,7 +601,7 @@
                                 </Border.Background>
 
                                 <StackPanel Margin="0,0,0,0">
-                                    <TextBlock Margin="2.5" Text="Microsoft SQL Server" TextAlignment="Center"/>
+                                    <TextBlock Margin="2.5" Text="{Binding CompetitorName}" TextAlignment="Center"/>
                                     <ProgressBar x:Name="mssql_progress"   Minimum="0" Maximum="100" Margin="2.5"  Style="{DynamicResource ProgressBarStyle}" />
 
                                     <Grid TextElement.FontSize="15">

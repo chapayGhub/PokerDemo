@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <DemoConfig>
-    <ScServerIp>127.0.0.1</ScServerIp>
+  <!-- Starcounter settings -->
+  <ScServerIp>127.0.0.1</ScServerIp>
 	<ScServerPort>8080</ScServerPort>
-    <MsSqlServerIp>127.0.0.1</MsSqlServerIp>
-	<MsSqlServerPort>8081</MsSqlServerPort>
+  
+  <!-- Microsoft SQL Server settings -->
+  <CompetitorServerIp>127.0.0.1</CompetitorServerIp>
+  <CompetitorServerPort>8081</CompetitorServerPort>
+  <CompetitorName>MS SQL Server</CompetitorName>
+  
+  <!-- MongoDb settings
+  <CompetitorServerIp>127.0.0.1</CompetitorServerIp>
+  <CompetitorServerPort>8082</CompetitorServerPort>
+  <CompetitorName>MongoDb</CompetitorName>
+  -->
+
 </DemoConfig>

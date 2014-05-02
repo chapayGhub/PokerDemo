@@ -20,7 +20,7 @@ namespace PlayersDemoGui {
         private ResponseHandler respHandler = null;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private bool runMsSql = false;
+        private bool runMsSql = true;
 
         #region Fields
 
@@ -171,7 +171,19 @@ namespace PlayersDemoGui {
             }
         }
 
-        
+        string _competitorName;
+        public string CompetitorName {
+            get { return _competitorName; }
+            set {
+                this._competitorName = value;
+                this.OnPropertyChanged("CompetitorName");
+            }
+        }
+
+        public string RaceTitle {
+            get { return "Starcounter vs. " + CompetitorName; }
+        }
+
         public bool IsPaused {
             get {
                 return this._IsPaused;
@@ -287,6 +299,7 @@ namespace PlayersDemoGui {
 
         public InterfaceObject() {
             this._dispatcher = Dispatcher.FromThread(Thread.CurrentThread);
+            ReadDemoConfig();
         }
 
         public void Run() {
@@ -444,9 +457,6 @@ namespace PlayersDemoGui {
             this.IsPrepared = false;
             this.IsPreparationPhase = true;
 
-            // Reading configuration.
-            ReadDemoConfig();
-
             // Resetting Gui related stuff.
             ResetGui();
 
@@ -545,11 +555,17 @@ namespace PlayersDemoGui {
             tmp = xmlDoc.GetElementsByTagName("ScServerPort");
             this.ScServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8080
 
-            tmp = xmlDoc.GetElementsByTagName("MsSqlServerIp");
+            tmp = xmlDoc.GetElementsByTagName("CompetitorServerIp");
             this.MsSqlServerIp = ((XmlElement)tmp[0]).InnerText; // e.g. 127.0.0.1
 
-            tmp = xmlDoc.GetElementsByTagName("MsSqlServerPort");
+            tmp = xmlDoc.GetElementsByTagName("CompetitorServerPort");
             this.MsSqlServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8081
+
+            tmp = xmlDoc.GetElementsByTagName("CompetitorServerPort");
+            this.MsSqlServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8081
+
+            tmp = xmlDoc.GetElementsByTagName("CompetitorName");
+            this.CompetitorName = ((XmlElement)tmp[0]).InnerText; // e.g. Microsoft SQL Server
         }
 
         // Gracefully closes connection.

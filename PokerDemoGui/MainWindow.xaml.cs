@@ -166,7 +166,8 @@ namespace PlayersDemoGui
         {
             InitializeComponent();
 
-            this.DataContext = new InterfaceObject();
+            var o = new InterfaceObject();
+            this.DataContext = o;
 
             this.CompositionTargetEventHandler = new EventHandler(CompositionTarget_Rendering);
             CompositionTarget.Rendering += this.CompositionTargetEventHandler;
@@ -184,6 +185,8 @@ namespace PlayersDemoGui
             string mssql_time_ms = string.Format("{0:000}", co.MSSQL_Time.Milliseconds);
             this.tb_starcounter_time.Text = string.Format("{0}:{1:00}.{2:000}", co.Starcounter_Time.Minutes.ToString(), co.Starcounter_Time.Seconds, starcounter_Time_ms);
             this.tb_mssql_time.Text = string.Format("{0}:{1:00}.{2:000}", co.MSSQL_Time.Minutes.ToString(), co.MSSQL_Time.Seconds, mssql_time_ms);
+
+
 
             // Estimated time
 
