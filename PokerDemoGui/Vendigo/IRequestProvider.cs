@@ -4,6 +4,6 @@ using Starcounter;
 
 namespace Vendigo {
     public interface IRequestProvider {
-        int GetNextRequestBatch(out Request[] requestsBatch);
+        int GetNextRequestBatch(Request[] requestsBatch);
     }
 }

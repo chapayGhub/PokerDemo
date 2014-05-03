@@ -20,9 +20,6 @@ namespace PlayersDemoGui {
         // Request generator.
         RequestsCreator requestsCreator_ = null;
 
-        // Batched requests batch.
-        Request[] requestsBatch_ = null;
-
         // Reference to Gui.
         InterfaceObject gui_ = null;
 
@@ -63,7 +60,6 @@ namespace PlayersDemoGui {
                 );
 
             gui_ = gui;
-            requestsBatch_ = new Request[MaxRequestsInBatch];
         }
 
         // Resetting the requests creator.
@@ -72,10 +68,8 @@ namespace PlayersDemoGui {
         }
 
         // Gets next request batch.
-        public int GetNextRequestBatch(out Request[] requestsBatch) {
-            int count = requestsCreator_.CreateLinearRequests(requestsBatch_);
-            requestsBatch = requestsBatch_;
-            return count;
+        public int GetNextRequestBatch(Request[] requestsBatch) {
+            return requestsCreator_.CreateLinearRequests(requestsBatch);
         }
     }
 }

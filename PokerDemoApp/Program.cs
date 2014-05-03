@@ -8,6 +8,10 @@ namespace PokerDemoApp {
         static void Main() {
             CreateIndexes();
 
+            Handle.POST("/echotest", (Request req) => {
+                return new Response() { BodyBytes = req.BodyBytes };
+            });
+
             Handle.GET("/players/{?}", (int playerId) => {
                 var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;

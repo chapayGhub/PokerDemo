@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define FAKE_SAME_REQUEST
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using Starcounter;
 using Generator;
 
 namespace ClientEngine {
+
     // All supported requests types.
     public enum RequestTypes {
         DELETE_EVERYTHING,
@@ -24,12 +26,13 @@ namespace ClientEngine {
 
     // Basically generates requests and serializes mixed requests.
     public class RequestsCreator {
+
         // Requests/responses synchronization values.
         const Int32 ScRequestResponsesSync = 100000;
         const Int32 MsSqlRequestResponsesSync = 1000;
 
         // Number of different request types.
-        readonly Int32 numReqTypes = Enum.GetNames(typeof(RequestTypes)).Length;
+        readonly Int32 NumReqTypes = Enum.GetNames(typeof(RequestTypes)).Length;
 
         // All generated requests data.
         Request[] putPlayer_ = null;
@@ -38,6 +41,7 @@ namespace ClientEngine {
         Request[] getPlayerByFullName_ = null;
         Request[] transferMoneyBetweenTwoAccounts_ = null;
         Request[] depositMoneyToAccount_ = null;
+        static Request Stub = RequestGenerator.Stub();
         Byte[] requestTypesMixed_ = null;
 
         // Reference to Gui.
@@ -103,9 +107,9 @@ namespace ClientEngine {
             );
 
             // Initiating number of processed requests for each type.
-            numReqProcessed_ = new Int32[numReqTypes];
-            numReqNeeded_ = new Int32[numReqTypes];
-            numRespsNeeded_ = new Int32[numReqTypes];
+            numReqProcessed_ = new Int32[NumReqTypes];
+            numReqNeeded_ = new Int32[NumReqTypes];
+            numRespsNeeded_ = new Int32[NumReqTypes];
 
             // Initializing total number of request of each type.
             numReqNeeded_[(Int32)RequestTypes.DELETE_EVERYTHING] = 1;
@@ -129,7 +133,7 @@ namespace ClientEngine {
             totalRequestsProcessed_ = 0;
             numRespToWait_ = 0;
 
-            for (Int32 i = 0; i < numReqTypes; i++)
+            for (Int32 i = 0; i < NumReqTypes; i++)
                 numReqProcessed_[i] = 0;
         }
 
@@ -138,19 +142,21 @@ namespace ClientEngine {
            
             // Checking if we are in preparation phase.
             if (gui_.IsPreparationPhase) {
+
                 // Checking if we need to wait for certain amount of responses.
                 if (numRespToWait_ > 0) {
+
                     // Wait until needed number of responses returned.
                     while (rh_.NumGoodResponses < numRespToWait_)
                         Thread.Sleep(30);
 
                     // Preparation is done.
                     gui_.IsPreparationDone = true;
+
                     return 0;
                 } else {
                     // Sending delete all command.
                     requestBuffer[0] = RequestGenerator.Delete();
-                    requestBuffer[0].ConstructFromFields();
 
                     // Disabling wait on next time.
                     numRespToWait_ = 1;
@@ -168,6 +174,7 @@ namespace ClientEngine {
 
             // Checking if we need to wait for certain amount of responses.
             if (numRespToWait_ > 0) {
+
                 // Wait until needed number of responses returned.
                 while (rh_.NumGoodResponses < numRespToWait_)
                     Thread.Sleep(1);
@@ -213,6 +220,8 @@ namespace ClientEngine {
                 Request request = null;
 
                 // Performing request according to type.
+#if !FAKE_SAME_REQUEST
+
                 switch (type) {
                     case RequestTypes.DELETE_EVERYTHING:
                         request = RequestGenerator.Delete();
@@ -236,9 +245,11 @@ namespace ClientEngine {
                         request = depositMoneyToAccount_[curReqTypeIndex];    
                         break;
                 }
+#else
+                request = Stub;
+#endif
 
                 requestBuffer[count] = request;
-                requestBuffer[count].ConstructFromFields();
                 count++;
 
                 // Updating the Gui if possible.

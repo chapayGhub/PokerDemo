@@ -14,6 +14,15 @@ namespace Generator {
             var request = new Request();
             request.Method = "DELETE";
             request.Uri = "/all";
+            request.ConstructFromFields();
+            return request;
+        }
+
+        public static Request Stub() {
+            var request = new Request();
+            request.Method = "POST";
+            request.Uri = "/echotest";
+            request.ConstructFromFields();
             return request;
         }
 
@@ -21,6 +30,7 @@ namespace Generator {
             var request = new Request();
             request.Method = "GET";
             request.Uri = "/players/" + playerId;
+            request.ConstructFromFields();
             return request;
         }
 
@@ -28,6 +38,7 @@ namespace Generator {
             var request = new Request();
             request.Method = "GET";
             request.Uri = "/dashboard/" + playerId;
+            request.ConstructFromFields();
             return request;
         }
 
@@ -35,6 +46,7 @@ namespace Generator {
             var request = new Request();
             request.Method = "GET";
             request.Uri = "/players?f=" + fullName;
+            request.ConstructFromFields();
             return request;
         }
 
@@ -61,6 +73,7 @@ namespace Generator {
             request.Method = "PUT";
             request.Uri = "/players/" + playerId;
             request.BodyBytes = paa.ToJsonUtf8();
+            request.ConstructFromFields();
             return request;
         }
 
@@ -73,6 +86,7 @@ namespace Generator {
                           + accountId2
                           + "&x="
                           + (int)rand.Next(1, 50);
+            request.ConstructFromFields();
             return request;
         }
 
@@ -83,6 +97,7 @@ namespace Generator {
                           + accountId
                           + "&x="
                           + (Int32)rand.Next(1, 50);
+            request.ConstructFromFields();
             return request;
         }
     }
