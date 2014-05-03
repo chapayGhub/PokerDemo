@@ -7,6 +7,7 @@ namespace PokerDemoApp {
     class Program {
         static void Main() {
             CreateIndexes();
+            Json.DirtyCheckEnabled = false;
 
             Handle.POST("/echotest", (Request req) => {
                 return new Response() { BodyBytes = req.BodyBytes };
