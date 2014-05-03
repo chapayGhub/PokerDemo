@@ -7,6 +7,7 @@ namespace PokerDemoApp {
     class Program {
         static void Main() {
             CreateIndexes();
+            Json.DirtyCheckEnabled = false;
 
             Handle.GET("/players/{?}", (int playerId) => {
                 var json = new PlayerJson();
