@@ -206,11 +206,11 @@ namespace Vendigo {
                 return false;
             }
 
-            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests, out int numRespToWait) {
+            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests, out bool completeBatchBeforeGettingMore) {
                 ResetRoundNumbers();
 
                 Request[] requests = new Request[maxNumRequests];
-                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out numRespToWait);
+                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out completeBatchBeforeGettingMore);
                 if (count == 0)
                     return true;
 
@@ -246,8 +246,8 @@ namespace Vendigo {
             }
 
             public Boolean DoSendUntilAllReceived() {
-                int numRespToWait;
-                if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out numRespToWait)) {
+                bool completeBatchBeforeGettingMore;
+                if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out completeBatchBeforeGettingMore)) {
                     // All request sent.
                     return true;
                 }
@@ -277,8 +277,8 @@ namespace Vendigo {
                 int totalNumRequestsToSent = 0;
 
                 for (; ; ) {
-                    int numRespToWait;
-                    if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out numRespToWait)) {
+                    bool completeBatchBeforeGettingMore;
+                    if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out completeBatchBeforeGettingMore)) {
                         // All request sent.
 
                         while (totalNumProcessedResponses_ != totalNumRequestsToSent) {
@@ -290,7 +290,7 @@ namespace Vendigo {
                     totalNumRequestsToSent += roundNumRequestsToSend_;
                     DoOneSend();
 
-                    if (numRespToWait == 0) {
+                    if (!completeBatchBeforeGettingMore) {
                         while ((totalNumRequestsToSent - totalNumProcessedResponses_) > DefaultOneSendNumRequests) {
                             DoOneReceive2();
                         }
