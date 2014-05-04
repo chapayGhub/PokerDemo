@@ -62,6 +62,7 @@ namespace Vendigo {
             Int32 roundNumProcessedResponses_;
 
             Int64 totalNumProcessedBodyBytes_;
+            Int64 totalNumProcessedResponses_;
 
             Int64 roundCorrectChecksum_;
             Int64 roundResponsesChecksum_;
@@ -172,15 +173,13 @@ namespace Vendigo {
                 }
             }
 
-            Boolean DoOneSendAndReceive() {
+            void DoOneSend() {
+                Int32 bytesSent = aggrSocket_.Send(sendBuf_, roundNumBytesToSend_, SocketFlags.None);
+                if (bytesSent != roundNumBytesToSend_)
+                    throw new IndexOutOfRangeException("bytesSent != numBytesToSend");
+            }
 
-                // Don't send if not all round responses are processed.
-                if (roundNumProcessedResponses_ == 0) {
-                    Int32 bytesSent = aggrSocket_.Send(sendBuf_, roundNumBytesToSend_, SocketFlags.None);
-                    if (bytesSent != roundNumBytesToSend_)
-                        throw new IndexOutOfRangeException("bytesSent != numBytesToSend");
-                }
-                
+            bool DoOneReceive() {
                 Int32 bytesReceived = aggrSocket_.Receive(recvBuf_, receiveOffset_, recvBuf_.Length - receiveOffset_, SocketFlags.None);
                 bytesReceived += receiveOffset_;
 
@@ -191,6 +190,7 @@ namespace Vendigo {
                 CheckResponses(recvBuf_, bytesReceived, out receiveOffset_, out numResponses, out numBodyBytes, out checksum);
 
                 roundNumProcessedResponses_ += numResponses;
+                totalNumProcessedResponses_ += numResponses;
                 totalNumProcessedBodyBytes_ += numBodyBytes;
 
                 roundResponsesChecksum_ += checksum;
@@ -206,12 +206,11 @@ namespace Vendigo {
                 return false;
             }
 
-            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests) {
-
+            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests, out int numRespToWait) {
                 ResetRoundNumbers();
 
                 Request[] requests = new Request[maxNumRequests];
-                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests);
+                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out numRespToWait);
                 if (count == 0)
                     return true;
 
@@ -247,13 +246,61 @@ namespace Vendigo {
             }
 
             public Boolean DoSendUntilAllReceived() {
-
-                if (GetRequestsPlainBuffer(DefaultOneSendNumRequests))
+                int numRespToWait;
+                if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out numRespToWait)) {
+                    // All request sent.
                     return true;
+                }
 
-                while (!DoOneSendAndReceive());
+                DoOneSend();
+
+                while (!DoOneReceive()) ;
 
                 return false;
+            }
+
+            void DoOneReceive2() {
+                Int32 bytesReceived = aggrSocket_.Receive(recvBuf_, receiveOffset_, recvBuf_.Length - receiveOffset_, SocketFlags.None);
+                bytesReceived += receiveOffset_;
+
+                Int64 numBodyBytes = 0;
+                Int32 numResponses = 0;
+                Int64 checksum = 0;
+
+                CheckResponses(recvBuf_, bytesReceived, out receiveOffset_, out numResponses, out numBodyBytes, out checksum);
+
+                totalNumProcessedResponses_ += numResponses;
+                totalNumProcessedBodyBytes_ += numBodyBytes;
+            }
+
+            public bool DoSendUntilAllReceived2() {
+                int totalNumRequestsToSent = 0;
+
+                for (; ; ) {
+                    int numRespToWait;
+                    if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out numRespToWait)) {
+                        // All request sent.
+
+                        while (totalNumProcessedResponses_ != totalNumRequestsToSent) {
+                            DoOneReceive2();
+                        }
+                        return true;
+                    }
+
+                    totalNumRequestsToSent += roundNumRequestsToSend_;
+                    DoOneSend();
+
+                    if (numRespToWait == 0) {
+                        while ((totalNumRequestsToSent - totalNumProcessedResponses_) > DefaultOneSendNumRequests) {
+                            DoOneReceive2();
+                        }
+                    }
+                    else {
+                        while (totalNumRequestsToSent != totalNumProcessedResponses_) {
+                            DoOneReceive2();
+                        }
+                    }
+                }
             }
         };
 
@@ -262,7 +309,8 @@ namespace Vendigo {
             // Processing until all responses are received.
             while (true) {
                 for (Int32 i = 0; i < conns.Length; i++) {
-                    if (conns[i].DoSendUntilAllReceived()) {
+//                    if (conns[i].DoSendUntilAllReceived()) {
+                    if (conns[i].DoSendUntilAllReceived2()) {
                         ws.CountdownEvent.Signal();
                         return;
                     }
