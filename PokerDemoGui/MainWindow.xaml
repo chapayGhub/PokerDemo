@@ -516,7 +516,7 @@
 
                             <!-- Operations/transactions -->
                             <TextBlock Margin="5" Grid.Row="4" Grid.Column="0" Text="Get player's ID" VerticalAlignment="Center"/>
-                            <Slider IsEnabled="{Binding Path=IsRunning, Converter={StaticResource InverseBooleanConverter}}" Margin="5" x:Name="slider5" Value="{Binding Slider_05}"  Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="1000000" LargeChange="1000" SmallChange="1000" TickFrequency="100" IsSnapToTickEnabled="True"/>
+                            <Slider IsEnabled="{Binding Path=IsRunning, Converter={StaticResource InverseBooleanConverter}}" Margin="5" x:Name="slider5" Value="{Binding Slider_05}"  Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="3000000" LargeChange="1000" SmallChange="1000" TickFrequency="100" IsSnapToTickEnabled="True"/>
                             <TextBlock Margin="5" TextAlignment="Right" Grid.Row="4" Grid.Column="2" Text="{Binding ElementName=slider5,Path=Value, StringFormat={}{0:#,0}}" VerticalAlignment="Center"/>
 
                             <!-- Operations/transactions -->

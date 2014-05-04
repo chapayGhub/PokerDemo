@@ -36,12 +36,12 @@ namespace PlayersDemoGui {
         private Dispatcher _dispatcher;
 
         #region Sliders
-        private double _Slider_01 = 10000;
-        private double _Slider_02 = 100000;
-        private double _Slider_03 = 100000;
-        private double _Slider_04 = 100000;
-        private double _Slider_05 = 100000;
-        private double _Slider_06 = 100000;
+        private double _Slider_01 = 1000;
+        private double _Slider_02 = 0;
+        private double _Slider_03 = 0;
+        private double _Slider_04 = 0;
+        private double _Slider_05 = 3000000;
+        private double _Slider_06 = 0;
         #endregion
 
         #endregion
