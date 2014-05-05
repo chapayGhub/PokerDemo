@@ -12,18 +12,22 @@ using System.Net.Sockets;
 namespace Vendigo {
     internal class Sender {
 
-        private readonly IRequestProvider requestProvider_;
-        private readonly IResponseHandler responseHandler_;
-
         const Int32 NumAggregationSockets = 1;
         const Int32 NumWorkers = 1;
         const Int32 DefaultOneSendNumRequests = 5000;
         const Int32 SendBufSizeBytes = 1024 * 1024 * 16;
         const Int32 RecvBufSizeBytes = 1024 * 1024 * 16;
         const Int32 OneRequestsMaxSizeBytes = 256;
-        const UInt16 UserPort = 8080;
         const UInt16 AggregationPort = 9191;
-        const String ServerPort = "127.0.0.1";
+
+        private readonly IRequestProvider requestProvider_;
+        private readonly IResponseHandler responseHandler_;
+
+        UInt16 serverPort_ = 8080;
+        public UInt16 ServerPort { get { return serverPort_; } }
+
+        String serverIp_ = "127.0.0.1";
+        public String ServerIp { get { return serverIp_; } }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct AggregationStruct {
@@ -100,10 +104,10 @@ namespace Vendigo {
                 aggrSocket_.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 1 << 19);
                 aggrSocket_.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 1 << 19);
 
-                aggrSocket_.Connect(ServerPort, AggregationPort);
+                aggrSocket_.Connect(sender_.ServerIp, AggregationPort);
 
                 agsOrig_ = new AggregationStruct() {
-                    port_number_ = UserPort
+                    port_number_ = sender_.ServerPort
                 };
 
                 Byte[] sendBuf = new Byte[1024],
@@ -151,7 +155,7 @@ namespace Vendigo {
                         }
 
                         AggregationStruct* ags = (AggregationStruct*)(p + offset);
-                        if (ags->port_number_ != UserPort)
+                        if (ags->port_number_ != sender_.ServerPort)
                             throw new ArgumentOutOfRangeException();
 
                         if (numUnprocessedBytes < (AggregationStructSizeBytes + ags->size_bytes_)) {
@@ -318,7 +322,9 @@ namespace Vendigo {
             }
         }
         
-        internal Sender(IRequestProvider requestProvider, IResponseHandler responseHandler) {
+        internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler) {
+            serverIp_ = serverIp;
+            serverPort_ = serverPort;
             requestProvider_ = requestProvider;
             responseHandler_ = responseHandler;
         }

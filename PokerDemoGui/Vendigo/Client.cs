@@ -8,10 +8,10 @@ namespace Vendigo {
     public class Client {
         private Thread sendThread_;
 
-        public void Start(string hostName, ushort port, IResponseHandler responseHandler, IRequestProvider requestProvider) {
+        public void Start(string serverIp, ushort serverPort, IResponseHandler responseHandler, IRequestProvider requestProvider) {
             Console.WriteLine("Connection established.");
 
-            sendThread_ = new Thread(new ThreadStart(new Sender(requestProvider, responseHandler).ClientSenderThread));
+            sendThread_ = new Thread(new ThreadStart(new Sender(serverIp, serverPort, requestProvider, responseHandler).ClientSenderThread));
             sendThread_.Start();
         }
 
