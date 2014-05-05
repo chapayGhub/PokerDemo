@@ -13,7 +13,7 @@ namespace PokerDemoApp {
                 return new Response() { BodyBytes = req.BodyBytes };
             });
 
-            Handle.GET("/players/{?}", (int playerId, Request req) => {
+            Handle.GET("/players/{?}", (int playerId) => {
                 var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
