@@ -138,8 +138,9 @@ namespace ClientEngine {
         }
 
         // Creates linear requests one type after another.
-        public unsafe int CreateLinearRequests(Request[] requestBuffer, out int numRespToWait) {
-           
+        public unsafe int CreateLinearRequests(Request[] requestBuffer, out bool completeBatchBeforeCreatingMore) {
+            completeBatchBeforeCreatingMore = false;
+
             // Checking if we are in preparation phase.
             if (gui_.IsPreparationPhase) {
 
@@ -153,7 +154,6 @@ namespace ClientEngine {
                     // Preparation is done.
                     gui_.IsPreparationDone = true;
 
-                    numRespToWait = numRespToWait_;
                     return 0;
                 } else {
                     // Sending delete all command.
@@ -161,23 +161,17 @@ namespace ClientEngine {
 
                     // Disabling wait on next time.
                     numRespToWait_ = 1;
-
-                    numRespToWait = numRespToWait_;
+                    completeBatchBeforeCreatingMore = true;
                     return 1;
                 }
             }
 
             // Checking if aborted.
-            if (gui_.IsAborted) {
-                numRespToWait = numRespToWait_;
-                return 0;
-            }
+            if (gui_.IsAborted) return 0;
 
             // Checking if all requests are processed.
-            if (totalRequestsProcessed_ >= totalPlannedRequestsNum_) {
-                numRespToWait = numRespToWait_;
+            if (totalRequestsProcessed_ >= totalPlannedRequestsNum_)
                 return 0;
-            }
 
             // Checking if we need to wait for certain amount of responses.
             if (numRespToWait_ > 0) {
@@ -269,18 +263,15 @@ namespace ClientEngine {
                 // Checking if we need to block next time to wait for responses.
                 if (numRespsNeeded_[typeIndex] == totalRequestsProcessed_) {
                     numRespToWait_ = numRespsNeeded_[typeIndex];
-                    numRespToWait = numRespToWait_;
+                    completeBatchBeforeCreatingMore = true;
                     return count;
                 }
 
                 // Checking if all requests are processed.
-                if (totalRequestsProcessed_ >= totalPlannedRequestsNum_) {
-                    numRespToWait = numRespToWait_;
+                if (totalRequestsProcessed_ >= totalPlannedRequestsNum_)
                     return count;
-                }
             }
 
-            numRespToWait = numRespToWait_;
             return count;
         }
 
