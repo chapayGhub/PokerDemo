@@ -42,7 +42,7 @@ namespace PokerDemoAppMsSql {
                         json.PlayerId = player.PlayerId;
                         json.FullName = player.FullName;
                     });
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET(8081, "/dashboard/{?}", (int playerId) => {
@@ -58,7 +58,7 @@ namespace PokerDemoAppMsSql {
                             a.Balance = account.Balance;
                         }
                     });
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET(8081, "/players?f={?}", (string fullName) => {
@@ -69,7 +69,7 @@ namespace PokerDemoAppMsSql {
                         json.PlayerId = player.PlayerId;
                         json.FullName = player.FullName;
                     });
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.PUT(8081, "/players/{?}", (int playerId, PlayerAndAccounts json) => {

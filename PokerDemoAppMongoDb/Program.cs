@@ -19,7 +19,7 @@ namespace PokerDemoAppMongoDb {
                 var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 json.PlayerId = player.PlayerId;
                 json.FullName = player.FullName;
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.PUT(8082, "/players/{?}", (int playerId, PlayerAndAccounts json) => {
@@ -49,7 +49,7 @@ namespace PokerDemoAppMongoDb {
                     a.Balance = account.Balance;
                 }
 
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET(8082, "/players?f={?}", (string fullName) => {
@@ -58,7 +58,7 @@ namespace PokerDemoAppMongoDb {
                 var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 json.PlayerId = player.PlayerId;
                 json.FullName = player.FullName;
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.POST(8082, "/transfer?f={?}&t={?}&x={?}", (int fromId, int toId, int amount) => {
