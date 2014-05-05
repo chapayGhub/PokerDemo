@@ -13,22 +13,23 @@ namespace PokerDemoApp {
                 return new Response() { BodyBytes = req.BodyBytes };
             });
 
-            Handle.GET("/players/{?}", (int playerId) => {
+            Handle.GET("/players/{?}", (int playerId, Request req) => {
                 var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
+//                return new Response() { BodyBytes = req.BodyBytes };
             });
 
             Handle.GET("/dashboard/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE PlayerId = ?", playerId).First;
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET("/players?f={?}", (string fullName) => {
                 var json = new PlayerJson();
                 json.Data = Db.SQL("SELECT p FROM Player p WHERE FullName = ?", fullName).First;
-                return json;
+                return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.PUT("/players/{?}", (int playerId, PlayerAndAccounts json) => {
@@ -60,9 +61,9 @@ namespace PokerDemoApp {
                     Account target = Db.SQL<Account>("SELECT a FROM Account a WHERE AccountId = ?", toId).First;
                     source.Balance -= amount;
                     target.Balance += amount;
-                    if (source.Balance < 0 || target.Balance < 0 ) {
-                        throw new Exception("You cannot move money that is not in the account");
-                    }
+                    //if (source.Balance < 0 || target.Balance < 0 ) {
+                    //    throw new Exception("You cannot move money that is not in the account");
+                    //}
                 });
                 return 200;
             });
@@ -71,9 +72,9 @@ namespace PokerDemoApp {
                 Db.Transaction(() => {
                     Account account = Db.SQL<Account>("SELECT a FROM Account a WHERE a.AccountId = ?", toId).First;
                     account.Balance += amount;
-                    if (account.Balance < 0) {
-                        throw new Exception("You cannot withdraw money that is not in the account");
-                    }
+                    //if (account.Balance < 0) {
+                    //    throw new Exception("You cannot withdraw money that is not in the account");
+                    //}
                 });
 
                 return 200;
