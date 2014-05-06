@@ -10,6 +10,16 @@ namespace Generator {
         public const int MaxAccountsPerPlayer = 3;
         public const int DataTypeLength = 1;
 
+        public static class GeneratedTotals {
+            public static long IntialMoneyInPlay { get; set; }
+            public static long MoneyDeposited { get; set; }
+
+            public static void Reset() {
+                IntialMoneyInPlay = 0;
+                MoneyDeposited = 0;
+            }
+        }
+
         public static Request Delete() {
             var request = new Request();
             request.Method = "DELETE";
@@ -67,6 +77,7 @@ namespace Generator {
                 account.AccountId = accountId;
                 account.AccountType = i + 1;
                 account.Balance = 1;// rand.Next(5000000, 10000000);
+                GeneratedTotals.IntialMoneyInPlay += account.Balance;
             }
 
             var request = new Request();
@@ -79,25 +90,28 @@ namespace Generator {
 
         public static Request PostTransfer(Random rand, int accountId1, int accountId2) {
             var request = new Request();
+            var amountToTransfer = (int)rand.Next(1, 50);
             request.Method = "POST";
             request.Uri = "/transfer?f="
                           + accountId1
                           + "&t="
                           + accountId2
                           + "&x="
-                          + (int)rand.Next(1, 50);
+                          + amountToTransfer;
             request.ConstructFromFields();
             return request;
         }
 
         public static Request PostDeposit(Random rand, int accountId) {
             var request = new Request();
+            var amountToDeposit = (Int32)rand.Next(1, 50);
             request.Method = "POST";
             request.Uri = "/deposit?a="
                           + accountId
                           + "&x="
-                          + (Int32)rand.Next(1, 50);
+                          + amountToDeposit;
             request.ConstructFromFields();
+            GeneratedTotals.MoneyDeposited += amountToDeposit;
             return request;
         }
     }

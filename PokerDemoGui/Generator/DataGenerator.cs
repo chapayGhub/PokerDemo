@@ -26,6 +26,8 @@ namespace Generator
         {
             Random rand = new Random(initialRandNum);
 
+            RequestGenerator.GeneratedTotals.Reset();
+
             // Obtaining first names.
             String[] allNames = File.ReadAllLines("Names.txt");
 
