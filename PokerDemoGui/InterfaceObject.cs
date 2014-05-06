@@ -20,7 +20,7 @@ namespace PlayersDemoGui {
         private ResponseHandler respHandler = null;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private bool runMsSql = false;
+        internal bool runMsSql = false;
 
         #region Fields
 
