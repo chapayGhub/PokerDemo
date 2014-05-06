@@ -13,6 +13,14 @@ namespace PokerDemoAppMongoDb {
             CreateIndexes();
             ProcessTransactionsNotDone();
 
+            Handle.GET(8082, "/serverAggregates", () => {
+                // Return a string in the form:
+                // key1=value1;key2=value2;key[n]=value[n]...
+                // This values can then be displayed (by pressing a button)
+                // in the client GUI.
+                return "Test=123;Mongo=456";
+            });
+
             Handle.GET(8082, "/players/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
                 var query = Query<Player>.EQ(p => p.PlayerId, playerId);
