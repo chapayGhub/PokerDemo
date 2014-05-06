@@ -24,6 +24,40 @@ namespace ClientEngine {
         GET_PLAYER_BY_FULLNAME
     }
 
+    /// <summary>
+    /// Class used to receive and represent aggregated values from the
+    /// servers.
+    /// </summary>
+    public sealed class ServerAggregation {
+        public string ServerName { get; set; }
+        public Dictionary<string, string> Values;
+
+        private ServerAggregation(string name) {
+            ServerName = name;
+            Values = new Dictionary<string, string>();
+        }
+
+        public static ServerAggregation[] RequestNewFromBoth(InterfaceObject io) {
+            var starcounter = New("Starcounter", io.ScServerIp, io.ScServerPort);
+            if (io.runMsSql) {
+                var competitor = New(io.CompetitorName, io.MsSqlServerIp, io.MsSqlServerPort);
+                return new[] { starcounter, competitor };
+            }
+            return new[] { starcounter };
+        }
+
+        static ServerAggregation New(string name, string host, string port) {
+            var data = X.GET<string>(string.Format("http://{0}:{1}/serverAggregates", host, port));
+            var tokens = data.Split(';');
+            var aggregation = new ServerAggregation(name);
+            foreach (var token in tokens) {
+                var keyValue = token.Split('=');
+                aggregation.Values.Add(keyValue[0], keyValue[1]);
+            }
+            return aggregation;
+        }
+    }
+
     // Basically generates requests and serializes mixed requests.
     public class RequestsCreator {
 
