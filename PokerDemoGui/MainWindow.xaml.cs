@@ -113,8 +113,8 @@ namespace PlayersDemoGui
                 }
                 if (serverValues.Length > 1) {
                     s += Environment.NewLine;
-                    s += serverValues[0].ServerName + ":" + Environment.NewLine;
-                    foreach (var item in serverValues[0].Values) {
+                    s += serverValues[1].ServerName + ":" + Environment.NewLine;
+                    foreach (var item in serverValues[1].Values) {
                         s += "  " + item.Key + "=" + item.Value + Environment.NewLine;
                     }
                 }
