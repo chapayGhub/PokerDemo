@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using Generator;
+using ClientEngine;
 
 namespace PlayersDemoGui
 {
@@ -83,6 +84,41 @@ namespace PlayersDemoGui
                 s += string.Format("Initial money total: {0}", RequestGenerator.GeneratedTotals.IntialMoneyInPlay);
                 s += Environment.NewLine;
                 s += string.Format("Money deposited: {0}", RequestGenerator.GeneratedTotals.MoneyDeposited);
+                MessageBox.Show(s, "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
+                e.Handled = true;
+            }
+        }
+
+        #endregion
+
+        #region Show server values Command
+
+        public static RoutedCommand ShowServerValues_RoutedCommand = new RoutedCommand();
+
+        private void CanExecute_ShowServerValues_Command(object sender, CanExecuteRoutedEventArgs e) {
+            InterfaceObject interfaceObject = this.DataContext as InterfaceObject;
+            if (interfaceObject != null) {
+                e.Handled = true;
+                e.CanExecute = interfaceObject.IsRunning == false && (interfaceObject.IsPrepared || interfaceObject.Starcounter_IsDone);
+            }
+        }
+
+        private void Executed_ShowServerValues_Command(object sender, ExecutedRoutedEventArgs e) {
+            InterfaceObject interfaceObject = this.DataContext as InterfaceObject;
+            if (interfaceObject != null) {
+                var serverValues = ServerAggregation.RequestNewFromBoth(interfaceObject);
+                var s = serverValues[0].ServerName + ":" + Environment.NewLine;
+                foreach (var item in serverValues[0].Values) {
+                    s += "  " + item.Key + "=" + item.Value + Environment.NewLine;
+                }
+                if (serverValues.Length > 1) {
+                    s += Environment.NewLine;
+                    s += serverValues[0].ServerName + ":" + Environment.NewLine;
+                    foreach (var item in serverValues[0].Values) {
+                        s += "  " + item.Key + "=" + item.Value + Environment.NewLine;
+                    }
+                }
+
                 MessageBox.Show(s, "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
                 e.Handled = true;
             }

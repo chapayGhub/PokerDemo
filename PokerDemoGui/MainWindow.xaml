@@ -14,6 +14,7 @@
         <CommandBinding Command="{x:Static local:MainWindow.Cancel_RoutedCommand}" CanExecute="CanExecute_Cancel_Command" Executed="Executed_Cancel_Command" />
         <CommandBinding Command="{x:Static local:MainWindow.ToggleFullScreen_RoutedCommand}" CanExecute="CanExecute_ToggleFullScreen_Command" Executed="Executed_ToggleFullScreen_Command" />
         <CommandBinding Command="{x:Static local:MainWindow.ShowClientSum_RoutedCommand}" CanExecute="CanExecute_ShowClientSum_Command" Executed="Executed_ShowClientSum_Command" />
+        <CommandBinding Command="{x:Static local:MainWindow.ShowServerValues_RoutedCommand}" CanExecute="CanExecute_ShowServerValues_Command" Executed="Executed_ShowServerValues_Command" />
     </Window.CommandBindings>
 
     <Window.InputBindings>
@@ -676,6 +677,7 @@
 
                             <Button  FontSize="10" Background="#80000000" Content="Delete old data/prepare random data" Command="{x:Static local:MainWindow.Prepare_RoutedCommand}"/>
                             <Button  FontSize="10" Background="#80000000" Content="Show client sums" Command="{x:Static local:MainWindow.ShowClientSum_RoutedCommand}"/>
+                            <Button  FontSize="10" Background="#80000000" Content="Show server sums" Command="{x:Static local:MainWindow.ShowServerValues_RoutedCommand}"/>
 
                         </StackPanel>
 
