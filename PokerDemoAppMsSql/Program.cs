@@ -35,12 +35,10 @@ namespace PokerDemoAppMsSql {
             InitDb();
 
             Handle.GET(8081, "/players/{?}", (int playerId) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 using (var db = new PlayersDemoDb())
                     RunTransaction(delegate {
-                        Player player = db.Players.Find(playerId);
-                        json.PlayerId = player.PlayerId;
-                        json.FullName = player.FullName;
+                        json.Data = db.Players.Find(playerId);
                     });
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
@@ -49,25 +47,16 @@ namespace PokerDemoAppMsSql {
                 var json = new PlayerAndAccounts();
                 using (var db = new PlayersDemoDb())
                     RunTransaction(delegate {
-                        Player player = db.Players.Find(playerId);
-                        json.PlayerId = player.PlayerId;
-                        json.FullName = player.FullName;
-                        foreach (Account account in player.Accounts) {
-                            var a = json.Accounts.Add();
-                            a.AccountId = account.AccountId;
-                            a.Balance = account.Balance;
-                        }
+                        json.Data = db.Players.Find(playerId);
                     });
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET(8081, "/players?f={?}", (string fullName) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 using (var db = new PlayersDemoDb())
                     RunTransaction(delegate {
-                        Player player = db.Players.Where(p => p.FullName == fullName).First<Player>();
-                        json.PlayerId = player.PlayerId;
-                        json.FullName = player.FullName;
+                        json.Data = db.Players.Where(p => p.FullName == fullName).First<Player>();
                     });
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
