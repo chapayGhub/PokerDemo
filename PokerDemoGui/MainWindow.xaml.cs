@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
+using Generator;
 
 namespace PlayersDemoGui
 {
@@ -78,7 +79,11 @@ namespace PlayersDemoGui
         private void Executed_ShowClientSum_Command(object sender, ExecutedRoutedEventArgs e) {
             InterfaceObject interfaceObject = this.DataContext as InterfaceObject;
             if (interfaceObject != null) {
-                MessageBox.Show("The sum is 123!", "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
+                var s = string.Empty;
+                s += string.Format("Initial money total: {0}", RequestGenerator.GeneratedTotals.IntialMoneyInPlay);
+                s += Environment.NewLine;
+                s += string.Format("Money deposited: {0}", RequestGenerator.GeneratedTotals.MoneyDeposited);
+                MessageBox.Show(s, "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
                 e.Handled = true;
             }
         }
