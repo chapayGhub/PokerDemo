@@ -9,6 +9,10 @@ namespace PokerDemoApp {
             CreateIndexes();
             Json.DirtyCheckEnabled = false;
 
+            Handle.GET("/serverAggregates", () => {
+                return "Test=123";
+            });
+
             Handle.POST("/echotest", (Request req) => {
                 return new Response() { BodyBytes = req.BodyBytes };
             });
