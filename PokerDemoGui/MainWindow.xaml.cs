@@ -62,6 +62,29 @@ namespace PlayersDemoGui
         }
 
         #endregion
+
+        #region Show client sum Command
+
+        public static RoutedCommand ShowClientSum_RoutedCommand = new RoutedCommand();
+
+        private void CanExecute_ShowClientSum_Command(object sender, CanExecuteRoutedEventArgs e) {
+            InterfaceObject interfaceObject = this.DataContext as InterfaceObject;
+            if (interfaceObject != null) {
+                e.Handled = true;
+                e.CanExecute = interfaceObject.IsRunning == false && interfaceObject.IsPrepared;
+            }
+        }
+
+        private void Executed_ShowClientSum_Command(object sender, ExecutedRoutedEventArgs e) {
+            InterfaceObject interfaceObject = this.DataContext as InterfaceObject;
+            if (interfaceObject != null) {
+                MessageBox.Show("The sum is 123!", "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
+                e.Handled = true;
+            }
+        }
+
+        #endregion
+
         #region Run Command
 
         public static RoutedCommand Run_RoutedCommand = new RoutedCommand();
