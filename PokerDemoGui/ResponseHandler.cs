@@ -36,7 +36,7 @@ namespace PlayersDemoGui {
             reqProvider_.Reset();
         }
 
-        // Batched response processor.
+        // Batched response processor. Thread-safe expected.
         void IResponseHandler.ProcessResponse(Response response) {
             Interlocked.Increment(ref numGoodResps_);
         }

@@ -13,7 +13,7 @@ namespace Vendigo {
     internal class Sender {
 
         const Int32 NumWorkers = 1;
-        //const Int32 NumWorkers = 2;
+        //const Int32 NumWorkers = 3;
         const Int32 DefaultOneSendNumRequests = 5000;
         const Int32 SendBufSizeBytes = 1024 * 1024 * 16;
         const Int32 RecvBufSizeBytes = 1024 * 1024 * 16;
@@ -22,6 +22,8 @@ namespace Vendigo {
 
         private readonly IRequestProvider requestProvider_;
         private readonly IResponseHandler responseHandler_;
+
+        private readonly object handlesSync = new object();
 
         UInt16 serverPort_ = 8080;
         public UInt16 ServerPort { get { return serverPort_; } }
@@ -47,7 +49,16 @@ namespace Vendigo {
         };
 
         class WorkerSettings {
-            public CountdownEvent CountdownEvent;
+            public readonly CountdownEvent CountdownEvent;
+           
+            public readonly ManualResetEvent[] HasZeroPendingRequests;
+
+            public WorkerSettings(int numWorkers) {
+                CountdownEvent = new CountdownEvent(numWorkers);
+                HasZeroPendingRequests = new ManualResetEvent[numWorkers];
+                for (var i = 0; i < numWorkers; i++)
+                    HasZeroPendingRequests[i] = new ManualResetEvent(true);
+            }
         };
 
         class ConnectionInfo {
@@ -182,12 +193,7 @@ namespace Vendigo {
                 ResetRoundNumbers();
 
                 Request[] requests = new Request[maxNumRequests];
-                Int32 count = 0;
-                
-                lock (sender_) {
-                    count = sender_.requestProvider_.GetNextRequestBatch(requests, out moreWhenBatchIsCompleted);
-                }
-                
+                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out moreWhenBatchIsCompleted);
                 if (count == 0)
                     return true;
 
@@ -236,7 +242,7 @@ namespace Vendigo {
                 totalNumProcessedBodyBytes_ += numBodyBytes;
             }
 
-            public bool DoSendUntilAllReceived2() {
+            public bool DoSendUntilAllReceived2(Int32 workerId, WorkerSettings ws) {
                 int totalNumRequestsToSent = 0;
 
                 for (; ; ) {
@@ -248,9 +254,25 @@ namespace Vendigo {
                             DoOneReceive2();
                         }
 
-                        if (moreWhenBatchIsCompleted) continue;
-                        return true;
+                        ws.HasZeroPendingRequests[workerId].Set();
+
+                        if (!moreWhenBatchIsCompleted) return true;
+
+                        // Wait for all other works to complete current batches before continuing.
+                        //
+                        // In case of a false positive where a worker has not yet reset its event
+                        // but has requests to process still this won't be a problem since we'll
+                        // just again get no requests to process and suspend here the next time
+                        // around.
+
+                        for (int i = 0; i < ws.HasZeroPendingRequests.Length; i++) {
+                            if (i != workerId) ws.HasZeroPendingRequests[i].WaitOne();
+                        }
+
+                        continue;
                     }
+
+                    ws.HasZeroPendingRequests[workerId].Reset();
 
                     totalNumRequestsToSent += roundNumRequestsToSend_;
                     DoOneSend();
@@ -263,7 +285,7 @@ namespace Vendigo {
         };
 
         void SenderWorker(Int32 workerId, WorkerSettings ws, ConnectionInfo conn) {
-            conn.DoSendUntilAllReceived2();
+            conn.DoSendUntilAllReceived2(workerId, ws);
             ws.CountdownEvent.Signal();
         }
         
@@ -281,9 +303,7 @@ namespace Vendigo {
                 conns[i] = new ConnectionInfo(this);
             }
 
-            WorkerSettings ws = new WorkerSettings() {
-                CountdownEvent = new CountdownEvent(NumWorkers)
-            };
+            WorkerSettings ws = new WorkerSettings(NumWorkers);
 
             for (Int32 i = 0; i < NumWorkers; i++) {
                 Int32 workerId = i;
@@ -294,6 +314,10 @@ namespace Vendigo {
             }
 
             ws.CountdownEvent.Wait();
+
+            ws.CountdownEvent.Dispose();
+            for (int i = 0; i < NumWorkers; i++)
+                ws.HasZeroPendingRequests[i].Dispose();
         }
     }
 }

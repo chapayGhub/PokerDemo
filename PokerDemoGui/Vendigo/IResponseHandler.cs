@@ -4,6 +4,6 @@ using Starcounter;
 
 namespace Vendigo {
     public interface IResponseHandler {
-        void ProcessResponse(Response response);
+        void ProcessResponse(Response response); // Thread-safe expected.
     }
 }
