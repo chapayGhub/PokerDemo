@@ -84,6 +84,8 @@ namespace PlayersDemoGui
                 s += string.Format("Initial money total: {0}", RequestGenerator.GeneratedTotals.IntialMoneyInPlay);
                 s += Environment.NewLine;
                 s += string.Format("Money deposited: {0}", RequestGenerator.GeneratedTotals.MoneyDeposited);
+                s += Environment.NewLine;
+                s += string.Format("Total: {0}", RequestGenerator.GeneratedTotals.IntialMoneyInPlay + RequestGenerator.GeneratedTotals.MoneyDeposited);
                 MessageBox.Show(s, "PlayersDemo", MessageBoxButton.OK, MessageBoxImage.Information);
                 e.Handled = true;
             }
