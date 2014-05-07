@@ -36,11 +36,9 @@ namespace PokerDemoAppMongoDb {
             });
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 var query = Query<Player>.EQ(p => p.PlayerId, playerId);
-                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
-                json.PlayerId = player.PlayerId;
-                json.FullName = player.FullName;
+                json.Data = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
@@ -62,24 +60,14 @@ namespace PokerDemoAppMongoDb {
             Handle.GET(8082, "/dashboard/{?}", (int playerId) => {
                 var json = new PlayerAndAccounts();
                 var query = Query<Player>.EQ(p => p.PlayerId, playerId);
-                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
-                json.PlayerId = player.PlayerId;
-                json.FullName = player.FullName;
-                foreach (Account account in player.Accounts) {
-                    var a = json.Accounts.Add();
-                    a.AccountId = account.AccountId;
-                    a.Balance = account.Balance;
-                }
-
+                json.Data = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 
             Handle.GET(8082, "/players?f={?}", (string fullName) => {
-                var json = new PlayerAndAccounts();
+                var json = new PlayerJson();
                 var query = Query<Player>.EQ(p => p.FullName, fullName);
-                var player = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
-                json.PlayerId = player.PlayerId;
-                json.FullName = player.FullName;
+                json.Data = Mongo.Db.Collection<Player>().FindOneAs<Player>(query);
                 return new Response() { BodyBytes = json.ToJsonUtf8() };
             });
 

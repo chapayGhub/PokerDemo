@@ -515,12 +515,12 @@
                             <TextBlock Margin="5" TextAlignment="Right" Grid.Row="3" Grid.Column="2" Text="{Binding ElementName=slider4,Path=Value, StringFormat={}{0:#,0}}" VerticalAlignment="Center"/>
 
                             <!-- Operations/transactions -->
-                            <TextBlock Margin="5" Grid.Row="4" Grid.Column="0" Text="Get player's ID" VerticalAlignment="Center"/>
+                            <TextBlock Margin="5" Grid.Row="4" Grid.Column="0" Text="Get player by ID" VerticalAlignment="Center"/>
                             <Slider IsEnabled="{Binding Path=IsRunning, Converter={StaticResource InverseBooleanConverter}}" Margin="5" x:Name="slider5" Value="{Binding Slider_05}"  Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="3000000" LargeChange="1000" SmallChange="1000" TickFrequency="100" IsSnapToTickEnabled="True"/>
                             <TextBlock Margin="5" TextAlignment="Right" Grid.Row="4" Grid.Column="2" Text="{Binding ElementName=slider5,Path=Value, StringFormat={}{0:#,0}}" VerticalAlignment="Center"/>
 
                             <!-- Operations/transactions -->
-                            <TextBlock Margin="5" Grid.Row="5" Grid.Column="0" Text="Get player's full name" VerticalAlignment="Center"/>
+                            <TextBlock Margin="5" Grid.Row="5" Grid.Column="0" Text="Get player by full name" VerticalAlignment="Center"/>
                             <Slider IsEnabled="{Binding Path=IsRunning, Converter={StaticResource InverseBooleanConverter}}" Margin="5" x:Name="slider6" Value="{Binding Slider_06}"  Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="1000000" LargeChange="1000" SmallChange="1000" TickFrequency="100" IsSnapToTickEnabled="True"/>
                             <TextBlock Margin="5" TextAlignment="Right" Grid.Row="5" Grid.Column="2" Text="{Binding ElementName=slider6,Path=Value, StringFormat={}{0:#,0}}" VerticalAlignment="Center"/>
 
