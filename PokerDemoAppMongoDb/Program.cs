@@ -9,6 +9,7 @@ namespace PokerDemoAppMongoDb {
         static object _lock = new object();
 
         static void Main() {
+            Json.DirtyCheckEnabled = false;
             Mongo.Init();
             CreateIndexes();
             ProcessTransactionsNotDone();

@@ -26,6 +26,8 @@ namespace PokerDemoAppMsSql {
         #endregion
 
         static void Main(string[] args) {
+            Json.DirtyCheckEnabled = false;
+
             if (args != null) {
                 if (args.Length == 1)
                     PlayersDemoDb.SetConnection(args[0]);
