@@ -12,8 +12,8 @@ using System.Net.Sockets;
 namespace Vendigo {
     internal class Sender {
 
-        const Int32 NumAggregationSockets = 1;
         const Int32 NumWorkers = 1;
+        //const Int32 NumWorkers = 2;
         const Int32 DefaultOneSendNumRequests = 5000;
         const Int32 SendBufSizeBytes = 1024 * 1024 * 16;
         const Int32 RecvBufSizeBytes = 1024 * 1024 * 16;
@@ -182,7 +182,12 @@ namespace Vendigo {
                 ResetRoundNumbers();
 
                 Request[] requests = new Request[maxNumRequests];
-                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out moreWhenBatchIsCompleted);
+                Int32 count = 0;
+                
+                lock (sender_) {
+                    count = sender_.requestProvider_.GetNextRequestBatch(requests, out moreWhenBatchIsCompleted);
+                }
+                
                 if (count == 0)
                     return true;
 
@@ -257,17 +262,9 @@ namespace Vendigo {
             }
         };
 
-        unsafe void SenderWorker(Int32 workerId, WorkerSettings ws, ConnectionInfo[] conns) {
-
-            // Processing until all responses are received.
-            while (true) {
-                for (Int32 i = 0; i < conns.Length; i++) {
-                    if (conns[i].DoSendUntilAllReceived2()) {
-                        ws.CountdownEvent.Signal();
-                        return;
-                    }
-                }
-            }
+        void SenderWorker(Int32 workerId, WorkerSettings ws, ConnectionInfo conn) {
+            conn.DoSendUntilAllReceived2();
+            ws.CountdownEvent.Signal();
         }
         
         internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler) {
@@ -279,8 +276,8 @@ namespace Vendigo {
 
         internal void ClientSenderThread() {
 
-            ConnectionInfo[] conns = new ConnectionInfo[NumAggregationSockets];
-            for (Int32 i = 0; i < NumAggregationSockets; i++) {
+            ConnectionInfo[] conns = new ConnectionInfo[NumWorkers];
+            for (Int32 i = 0; i < NumWorkers; i++) {
                 conns[i] = new ConnectionInfo(this);
             }
 
@@ -290,7 +287,8 @@ namespace Vendigo {
 
             for (Int32 i = 0; i < NumWorkers; i++) {
                 Int32 workerId = i;
-                ThreadStart threadDelegate = new ThreadStart(() => SenderWorker(workerId, ws, conns));
+                var conn = conns[i];
+                ThreadStart threadDelegate = new ThreadStart(() => SenderWorker(workerId, ws, conn));
                 Thread newThread = new Thread(threadDelegate);
                 newThread.Start();
             }
