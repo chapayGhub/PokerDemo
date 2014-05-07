@@ -54,6 +54,8 @@ namespace PlayersDemoGui {
         public String ScServerPort { get; set; }
         public String MsSqlServerIp { get; set; }
         public String MsSqlServerPort { get; set; }
+        public int StarcounterRequestsPerBatch { get; set; }
+        public int CompetitorRequestsPerBatch { get; set; }
         public double Starcounter_Progress { get; set; }
         public double Starcounter_Responses_Received { get; set; }
         public double Starcounter_Requests_Sent { get; set; }
@@ -341,7 +343,7 @@ namespace PlayersDemoGui {
             clientConn = new Client();
 
             // Starting client engine threads.
-            clientConn.Start(this.ScServerIp, ushort.Parse(this.ScServerPort), respHandler, reqProvider);
+            clientConn.Start(this.ScServerIp, ushort.Parse(this.ScServerPort), respHandler, reqProvider, StarcounterRequestsPerBatch);
 
             // Disabling measurements.
             this.Starcounter_MeasureStarted = false;
@@ -411,7 +413,7 @@ namespace PlayersDemoGui {
             clientConn = new Client();
 
             // Starting client engine threads.
-            clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider);
+            clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider, CompetitorRequestsPerBatch);
 
             // Disabling measurements.
             this.MSSQL_MeasureStarted = false;
@@ -478,7 +480,7 @@ namespace PlayersDemoGui {
             // Starting client engine here.
             clientConn = new Client();
 
-            clientConn.Start(this.ScServerIp, ushort.Parse(this.ScServerPort), respHandler, reqProvider);
+            clientConn.Start(this.ScServerIp, ushort.Parse(this.ScServerPort), respHandler, reqProvider, StarcounterRequestsPerBatch);
 
             // Waiting for cleanup to finish.
             while (!this.IsPreparationDone)
@@ -500,7 +502,7 @@ namespace PlayersDemoGui {
                 // Starting client engine here.
                 clientConn = new Client();
 
-                clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider);
+                clientConn.Start(this.MsSqlServerIp, ushort.Parse(this.MsSqlServerPort), respHandler, reqProvider, CompetitorRequestsPerBatch);
 
                 // Waiting for cleanup to finish.
                 while (!this.IsPreparationDone)
@@ -555,14 +557,17 @@ namespace PlayersDemoGui {
             tmp = xmlDoc.GetElementsByTagName("ScServerPort");
             this.ScServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8080
 
+            tmp = xmlDoc.GetElementsByTagName("ScRequestsPerBatch");
+            this.StarcounterRequestsPerBatch = int.Parse(((XmlElement)tmp[0]).InnerText); // e.g. 5000
+
             tmp = xmlDoc.GetElementsByTagName("CompetitorServerIp");
             this.MsSqlServerIp = ((XmlElement)tmp[0]).InnerText; // e.g. 127.0.0.1
 
             tmp = xmlDoc.GetElementsByTagName("CompetitorServerPort");
             this.MsSqlServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8081
 
-            tmp = xmlDoc.GetElementsByTagName("CompetitorServerPort");
-            this.MsSqlServerPort = ((XmlElement)tmp[0]).InnerText; // e.g. 8081
+            tmp = xmlDoc.GetElementsByTagName("CompetitorRequestsPerBatch");
+            this.CompetitorRequestsPerBatch = int.Parse(((XmlElement)tmp[0]).InnerText); // e.g. 100
 
             tmp = xmlDoc.GetElementsByTagName("CompetitorName");
             this.CompetitorName = ((XmlElement)tmp[0]).InnerText; // e.g. Microsoft SQL Server

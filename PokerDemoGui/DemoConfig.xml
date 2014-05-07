@@ -3,16 +3,19 @@
   <!-- Starcounter settings -->
   <ScServerIp>127.0.0.1</ScServerIp>
 	<ScServerPort>8080</ScServerPort>
+  <ScRequestsPerBatch>5000</ScRequestsPerBatch>
   
   <!-- Microsoft SQL Server settings -->
   <CompetitorServerIp>127.0.0.1</CompetitorServerIp>
   <CompetitorServerPort>8081</CompetitorServerPort>
   <CompetitorName>MS SQL Server</CompetitorName>
+  <CompetitorRequestsPerBatch>100</CompetitorRequestsPerBatch>
   
   <!-- MongoDb settings
   <CompetitorServerIp>127.0.0.1</CompetitorServerIp>
   <CompetitorServerPort>8082</CompetitorServerPort>
   <CompetitorName>MongoDb</CompetitorName>
+  <CompetitorRequestsPerBatch>100</CompetitorRequestsPerBatch>
   -->
 
 </DemoConfig>

@@ -14,7 +14,7 @@ namespace Vendigo {
 
         const Int32 NumAggregationSockets = 1;
         const Int32 NumWorkers = 1;
-        const Int32 DefaultOneSendNumRequests = 5000;
+        const Int32 DefaultOneSendNumRequests = 100;
         const Int32 SendBufSizeBytes = 1024 * 1024 * 16;
         const Int32 RecvBufSizeBytes = 1024 * 1024 * 16;
         const Int32 OneRequestsMaxSizeBytes = 256;
@@ -28,6 +28,8 @@ namespace Vendigo {
 
         String serverIp_ = "127.0.0.1";
         public String ServerIp { get { return serverIp_; } }
+
+        internal int RequestsPerBatch { get; private set; }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct AggregationStruct {
@@ -251,7 +253,7 @@ namespace Vendigo {
 
             public Boolean DoSendUntilAllReceived() {
                 bool completeBatchBeforeGettingMore;
-                if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out completeBatchBeforeGettingMore)) {
+                if (GetRequestsPlainBuffer(sender_.RequestsPerBatch, out completeBatchBeforeGettingMore)) {
                     // All request sent.
                     return true;
                 }
@@ -282,7 +284,7 @@ namespace Vendigo {
 
                 for (; ; ) {
                     bool completeBatchBeforeGettingMore;
-                    if (GetRequestsPlainBuffer(DefaultOneSendNumRequests, out completeBatchBeforeGettingMore)) {
+                    if (GetRequestsPlainBuffer(sender_.RequestsPerBatch, out completeBatchBeforeGettingMore)) {
                         // All request sent.
 
                         while (totalNumProcessedResponses_ != totalNumRequestsToSent) {
@@ -295,7 +297,7 @@ namespace Vendigo {
                     DoOneSend();
 
                     if (!completeBatchBeforeGettingMore) {
-                        while ((totalNumRequestsToSent - totalNumProcessedResponses_) > DefaultOneSendNumRequests) {
+                        while ((totalNumRequestsToSent - totalNumProcessedResponses_) > sender_.RequestsPerBatch) {
                             DoOneReceive2();
                         }
                     }
@@ -321,12 +323,13 @@ namespace Vendigo {
                 }
             }
         }
-        
-        internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler) {
+
+        internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler, int requestsPerBatch) {
             serverIp_ = serverIp;
             serverPort_ = serverPort;
             requestProvider_ = requestProvider;
             responseHandler_ = responseHandler;
+            RequestsPerBatch = requestsPerBatch;
         }
 
         internal void ClientSenderThread() {
