@@ -1,7 +1,9 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using Starcounter;
 using System;
+using System.Linq;
 
 namespace PokerDemoAppMongoDb {
 
@@ -18,7 +20,19 @@ namespace PokerDemoAppMongoDb {
                 // key1=value1;key2=value2;key[n]=value[n]...
                 // This values can then be displayed (by pressing a button)
                 // in the client GUI.
-                return "Test=123;Mongo=456";
+                var accounts = Mongo.Db.Collection<Account>();
+                var sum = new BsonDocument {
+                { "$group", 
+                    new BsonDocument { 
+                    { "_id", "Balance" }, 
+                    { "Total", new BsonDocument { { "$sum", "$Balance" } } } } 
+                  } 
+                };
+                var args = new AggregateArgs() { Pipeline = new[] { sum } };
+                var result = accounts.Aggregate(args).FirstOrDefault();
+                long total = result != null ? result["Total"].AsInt32 : 0;
+
+                return "AccountBalanceTotal=" + total.ToString();
             });
 
             Handle.GET(8082, "/players/{?}", (int playerId) => {
