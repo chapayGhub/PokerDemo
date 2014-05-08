@@ -40,7 +40,7 @@ namespace PlayersDemoGui {
         private double _Slider_02 = 0;
         private double _Slider_03 = 0;
         private double _Slider_04 = 0;
-        private double _Slider_05 = 3000000;
+        private double _Slider_05 = 1000000;
         private double _Slider_06 = 0;
         #endregion
 

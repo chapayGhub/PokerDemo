@@ -68,8 +68,10 @@ namespace PlayersDemoGui {
         }
 
         // Gets next request batch.
-        public int GetNextRequestBatch(Request[] requestsBatch, out bool completeBatchBeforeGettingMore) {
-            return requestsCreator_.CreateLinearRequests(requestsBatch, out completeBatchBeforeGettingMore);
+        public int GetNextRequestBatch(Request[] requestsBatch, out bool moreWhenBatchIsCompleted) {
+            lock (this) {
+                return requestsCreator_.CreateLinearRequests(requestsBatch, out moreWhenBatchIsCompleted);
+            }
         }
     }
 }

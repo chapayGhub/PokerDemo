@@ -12,9 +12,8 @@ using System.Net.Sockets;
 namespace Vendigo {
     internal class Sender {
 
-        const Int32 NumAggregationSockets = 1;
         const Int32 NumWorkers = 1;
-        const Int32 DefaultOneSendNumRequests = 100;
+        
         const Int32 SendBufSizeBytes = 1024 * 1024 * 16;
         const Int32 RecvBufSizeBytes = 1024 * 1024 * 16;
         const Int32 OneRequestsMaxSizeBytes = 256;
@@ -23,13 +22,19 @@ namespace Vendigo {
         private readonly IRequestProvider requestProvider_;
         private readonly IResponseHandler responseHandler_;
 
+        private readonly object handlesSync = new object();
+
         UInt16 serverPort_ = 8080;
-        public UInt16 ServerPort { get { return serverPort_; } }
+        internal UInt16 ServerPort { get { return serverPort_; } }
 
         String serverIp_ = "127.0.0.1";
-        public String ServerIp { get { return serverIp_; } }
+        internal String ServerIp { get { return serverIp_; } }
 
-        internal int RequestsPerBatch { get; private set; }
+        int requestsPerBatch_ = 5000;
+        internal int RequestsPerBatch {
+            get { return requestsPerBatch_; }
+            set { requestsPerBatch_ = value; }
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct AggregationStruct {
@@ -49,7 +54,16 @@ namespace Vendigo {
         };
 
         class WorkerSettings {
-            public CountdownEvent CountdownEvent;
+            public readonly CountdownEvent CountdownEvent;
+
+            public readonly ManualResetEvent[] HasZeroPendingRequests;
+
+            public WorkerSettings(int numWorkers) {
+                CountdownEvent = new CountdownEvent(numWorkers);
+                HasZeroPendingRequests = new ManualResetEvent[numWorkers];
+                for (var i = 0; i < numWorkers; i++)
+                    HasZeroPendingRequests[i] = new ManualResetEvent(true);
+            }
         };
 
         class ConnectionInfo {
@@ -65,23 +79,18 @@ namespace Vendigo {
 
             Byte[] recvBuf_;
             Int32 receiveOffset_;
-            Int32 roundNumProcessedResponses_;
 
             Int64 totalNumProcessedBodyBytes_;
             Int64 totalNumProcessedResponses_;
 
             Int64 roundCorrectChecksum_;
-            Int64 roundResponsesChecksum_;
 
             Int64 totalCorrectChecksum_;
-            Int64 totalResponsesChecksum_;
 
             void ResetRoundNumbers() {
                 roundNumBytesToSend_ = 0;
                 roundNumRequestsToSend_ = 0;
-                roundNumProcessedResponses_ = 0;
                 roundCorrectChecksum_ = 0;
-                roundResponsesChecksum_ = 0;
             }
 
             public unsafe ConnectionInfo(Sender sender) {
@@ -185,38 +194,11 @@ namespace Vendigo {
                     throw new IndexOutOfRangeException("bytesSent != numBytesToSend");
             }
 
-            bool DoOneReceive() {
-                Int32 bytesReceived = aggrSocket_.Receive(recvBuf_, receiveOffset_, recvBuf_.Length - receiveOffset_, SocketFlags.None);
-                bytesReceived += receiveOffset_;
-
-                Int64 numBodyBytes = 0;
-                Int32 numResponses = 0;
-                Int64 checksum = 0;
-
-                CheckResponses(recvBuf_, bytesReceived, out receiveOffset_, out numResponses, out numBodyBytes, out checksum);
-
-                roundNumProcessedResponses_ += numResponses;
-                totalNumProcessedResponses_ += numResponses;
-                totalNumProcessedBodyBytes_ += numBodyBytes;
-
-                roundResponsesChecksum_ += checksum;
-                totalResponsesChecksum_ += checksum;
-
-                if (roundNumProcessedResponses_ == roundNumRequestsToSend_) {
-                    if (roundResponsesChecksum_ != roundCorrectChecksum_)
-                        throw new ArgumentOutOfRangeException("CurrentResponsesChecksum != CorrectChecksum");
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests, out bool completeBatchBeforeGettingMore) {
+            unsafe Boolean GetRequestsPlainBuffer(Int32 maxNumRequests, out bool moreWhenBatchIsCompleted) {
                 ResetRoundNumbers();
 
                 Request[] requests = new Request[maxNumRequests];
-                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out completeBatchBeforeGettingMore);
+                Int32 count = sender_.requestProvider_.GetNextRequestBatch(requests, out moreWhenBatchIsCompleted);
                 if (count == 0)
                     return true;
 
@@ -251,20 +233,6 @@ namespace Vendigo {
                 return false;
             }
 
-            public Boolean DoSendUntilAllReceived() {
-                bool completeBatchBeforeGettingMore;
-                if (GetRequestsPlainBuffer(sender_.RequestsPerBatch, out completeBatchBeforeGettingMore)) {
-                    // All request sent.
-                    return true;
-                }
-
-                DoOneSend();
-
-                while (!DoOneReceive()) ;
-
-                return false;
-            }
-
             void DoOneReceive2() {
                 Int32 bytesReceived = aggrSocket_.Receive(recvBuf_, receiveOffset_, recvBuf_.Length - receiveOffset_, SocketFlags.None);
                 bytesReceived += receiveOffset_;
@@ -279,78 +247,83 @@ namespace Vendigo {
                 totalNumProcessedBodyBytes_ += numBodyBytes;
             }
 
-            public bool DoSendUntilAllReceived2() {
+            public bool DoSendUntilAllReceived2(Int32 workerId, WorkerSettings ws) {
                 int totalNumRequestsToSent = 0;
 
                 for (; ; ) {
-                    bool completeBatchBeforeGettingMore;
-                    if (GetRequestsPlainBuffer(sender_.RequestsPerBatch, out completeBatchBeforeGettingMore)) {
+                    bool moreWhenBatchIsCompleted;
+                    if (GetRequestsPlainBuffer(sender_.RequestsPerBatch, out moreWhenBatchIsCompleted)) {
                         // All request sent.
 
                         while (totalNumProcessedResponses_ != totalNumRequestsToSent) {
                             DoOneReceive2();
                         }
-                        return true;
+
+                        ws.HasZeroPendingRequests[workerId].Set();
+
+                        if (!moreWhenBatchIsCompleted) return true;
+
+                        // Wait for all other works to complete current batches before continuing.
+                        //
+                        // In case of a false positive where a worker has not yet reset its event
+                        // but has requests to process still this won't be a problem since we'll
+                        // just again get no requests to process and suspend here the next time
+                        // around.
+
+                        for (int i = 0; i < ws.HasZeroPendingRequests.Length; i++) {
+                            if (i != workerId) ws.HasZeroPendingRequests[i].WaitOne();
+                        }
+
+                        continue;
                     }
+
+                    ws.HasZeroPendingRequests[workerId].Reset();
 
                     totalNumRequestsToSent += roundNumRequestsToSend_;
                     DoOneSend();
 
-                    if (!completeBatchBeforeGettingMore) {
-                        while ((totalNumRequestsToSent - totalNumProcessedResponses_) > sender_.RequestsPerBatch) {
-                            DoOneReceive2();
-                        }
-                    }
-                    else {
-                        while (totalNumRequestsToSent != totalNumProcessedResponses_) {
-                            DoOneReceive2();
-                        }
+                    while ((totalNumRequestsToSent - totalNumProcessedResponses_) > sender_.RequestsPerBatch) {
+                        DoOneReceive2();
                     }
                 }
             }
         };
 
-        unsafe void SenderWorker(Int32 workerId, WorkerSettings ws, ConnectionInfo[] conns) {
-
-            // Processing until all responses are received.
-            while (true) {
-                for (Int32 i = 0; i < conns.Length; i++) {
-//                    if (conns[i].DoSendUntilAllReceived()) {
-                    if (conns[i].DoSendUntilAllReceived2()) {
-                        ws.CountdownEvent.Signal();
-                        return;
-                    }
-                }
-            }
+        void SenderWorker(Int32 workerId, WorkerSettings ws, ConnectionInfo conn) {
+            conn.DoSendUntilAllReceived2(workerId, ws);
+            ws.CountdownEvent.Signal();
         }
 
-        internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler, int requestsPerBatch) {
+        internal Sender(string serverIp, ushort serverPort, IRequestProvider requestProvider, IResponseHandler responseHandler, Int32 requestsPerBatch) {
             serverIp_ = serverIp;
             serverPort_ = serverPort;
             requestProvider_ = requestProvider;
             responseHandler_ = responseHandler;
-            RequestsPerBatch = requestsPerBatch;
+            requestsPerBatch_ = requestsPerBatch;
         }
 
         internal void ClientSenderThread() {
 
-            ConnectionInfo[] conns = new ConnectionInfo[NumAggregationSockets];
-            for (Int32 i = 0; i < NumAggregationSockets; i++) {
+            ConnectionInfo[] conns = new ConnectionInfo[NumWorkers];
+            for (Int32 i = 0; i < NumWorkers; i++) {
                 conns[i] = new ConnectionInfo(this);
             }
 
-            WorkerSettings ws = new WorkerSettings() {
-                CountdownEvent = new CountdownEvent(NumWorkers)
-            };
+            WorkerSettings ws = new WorkerSettings(NumWorkers);
 
             for (Int32 i = 0; i < NumWorkers; i++) {
                 Int32 workerId = i;
-                ThreadStart threadDelegate = new ThreadStart(() => SenderWorker(workerId, ws, conns));
+                var conn = conns[i];
+                ThreadStart threadDelegate = new ThreadStart(() => SenderWorker(workerId, ws, conn));
                 Thread newThread = new Thread(threadDelegate);
                 newThread.Start();
             }
 
             ws.CountdownEvent.Wait();
+
+            ws.CountdownEvent.Dispose();
+            for (int i = 0; i < NumWorkers; i++)
+                ws.HasZeroPendingRequests[i].Dispose();
         }
     }
 }

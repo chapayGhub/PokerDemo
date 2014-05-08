@@ -172,8 +172,8 @@ namespace ClientEngine {
         }
 
         // Creates linear requests one type after another.
-        public unsafe int CreateLinearRequests(Request[] requestBuffer, out bool completeBatchBeforeCreatingMore) {
-            completeBatchBeforeCreatingMore = false;
+        public unsafe int CreateLinearRequests(Request[] requestBuffer, out bool moreWhenBatchIsCompleted) {
+            moreWhenBatchIsCompleted = false;
 
             // Checking if we are in preparation phase.
             if (gui_.IsPreparationPhase) {
@@ -182,8 +182,10 @@ namespace ClientEngine {
                 if (numRespToWait_ > 0) {
 
                     // Wait until needed number of responses returned.
-                    while (rh_.NumGoodResponses < numRespToWait_)
-                        Thread.Sleep(30);
+                    if (rh_.NumGoodResponses < numRespToWait_) {
+                        moreWhenBatchIsCompleted = true;
+                        return 0;
+                    }
 
                     // Preparation is done.
                     gui_.IsPreparationDone = true;
@@ -195,7 +197,6 @@ namespace ClientEngine {
 
                     // Disabling wait on next time.
                     numRespToWait_ = 1;
-                    completeBatchBeforeCreatingMore = true;
                     return 1;
                 }
             }
@@ -211,8 +212,10 @@ namespace ClientEngine {
             if (numRespToWait_ > 0) {
 
                 // Wait until needed number of responses returned.
-                while (rh_.NumGoodResponses < numRespToWait_)
-                    Thread.Sleep(1);
+                if (rh_.NumGoodResponses < numRespToWait_) {
+                    moreWhenBatchIsCompleted = true;
+                    return 0;
+                }
 
                 // Disabling wait on next time.
                 numRespToWait_ = 0;
@@ -231,15 +234,18 @@ namespace ClientEngine {
 
             // Synchronizing requests/responses.
             if (gui_.IsStarcounterRunning) {
-                /*if ((totalRequestsProcessed_ - rh_.NumGoodResponses) >= ScRequestResponsesSync)
-                {
-                    while (totalRequestsProcessed_ != rh_.NumGoodResponses)
-                        Thread.Sleep(1);
+                /*if ((totalRequestsProcessed_ - rh_.NumGoodResponses) >= ScRequestResponsesSync) {
+                    if (totalRequestsProcessed_ != rh_.NumGoodResponses) {
+                        moreWhenBatchIsCompleted = true;
+                        return 0;
+                    }
                 }*/
             } else {
                 if ((totalRequestsProcessed_ - rh_.NumGoodResponses) >= MsSqlRequestResponsesSync) {
-                    while (totalRequestsProcessed_ != rh_.NumGoodResponses)
-                        Thread.Sleep(1);
+                    if (totalRequestsProcessed_ != rh_.NumGoodResponses) {
+                        moreWhenBatchIsCompleted = true;
+                        return 0;
+                    }
                 }
             }
 
@@ -297,7 +303,6 @@ namespace ClientEngine {
                 // Checking if we need to block next time to wait for responses.
                 if (numRespsNeeded_[typeIndex] == totalRequestsProcessed_) {
                     numRespToWait_ = numRespsNeeded_[typeIndex];
-                    completeBatchBeforeCreatingMore = true;
                     return count;
                 }
 
