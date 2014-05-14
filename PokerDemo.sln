@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoAppMsSql", "PokerD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoAppMongoDb", "PokerDemoAppMongoDb\PokerDemoAppMongoDb.csproj", "{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PokerDemoAppMsHekaton", "PokerDemoAppMsHekaton\PokerDemoAppMsHekaton.csproj", "{46978408-4EDE-4F84-909A-62E6FE27B378}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +39,10 @@ Global
 		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Debug|x64.Build.0 = Debug|x64
 		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|x64.ActiveCfg = Release|x64
 		{6B60F2FE-4A96-491F-8C0F-F5B9C37DE2F3}.Release|x64.Build.0 = Release|x64
+		{46978408-4EDE-4F84-909A-62E6FE27B378}.Debug|x64.ActiveCfg = Debug|x64
+		{46978408-4EDE-4F84-909A-62E6FE27B378}.Debug|x64.Build.0 = Debug|x64
+		{46978408-4EDE-4F84-909A-62E6FE27B378}.Release|x64.ActiveCfg = Release|x64
+		{46978408-4EDE-4F84-909A-62E6FE27B378}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
