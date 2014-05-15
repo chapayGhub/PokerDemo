@@ -45,7 +45,8 @@ namespace PokerDemoAppMsSqlHekaton
         public DbSet<Player> Players { get; set; }
         public DbSet<Account> Accounts { get; set; }
 
-        private static string _connection = "Server=LINUSPC\\SQLHEKATON14;Initial Catalog=PlayersDemoDb;Integrated Security=SSPI";//
+        //private static string _connection = "Server=LINUSPC\\SQLHEKATON14;Initial Catalog=PlayersDemoDb;Integrated Security=SSPI";//
+        private static string _connection = "Data Source=127.0.0.1,1433;Network Library=DBMSSOCN;Initial Catalog=PlayersDemoDb;User ID=sa;Password=admin@123;";
         public static string SetConnection(string SrvName)
         {
             _connection = "Server=" + SrvName + ";Initial Catalog=PlayersDemoDb;Integrated Security=SSPI";
